@@ -38,6 +38,19 @@
          type = "String";
       }
    }
+   element dma_control_write.Descriptor_Slave
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "67109376";
+         type = "String";
+      }
+   }
    element dma_control_read.Descriptor_Slave
    {
       datum _lockedAddress
@@ -51,7 +64,7 @@
          type = "String";
       }
    }
-   element dma_control_write.Descriptor_Slave
+   element dma_control_write.Response_Slave
    {
       datum _lockedAddress
       {
@@ -60,7 +73,7 @@
       }
       datum baseAddress
       {
-         value = "67109376";
+         value = "67109392";
          type = "String";
       }
    }
@@ -198,7 +211,7 @@
  <parameter name="projectName" value="" />
  <parameter name="sopcBorderPoints" value="false" />
  <parameter name="systemHash" value="1" />
- <parameter name="timeStamp" value="1361032774635" />
+ <parameter name="timeStamp" value="1361036915843" />
  <parameter name="useTestBenchNamingPattern" value="false" />
  <instanceScript></instanceScript>
  <interface name="reset_50" internal="clk_50.clk_in_reset" type="reset" dir="end" />
@@ -814,4 +827,12 @@
    version="12.1"
    start="pcie.pcie_core_reset"
    end="dma_master_write.Clock_reset" />
+ <connection
+   kind="avalon"
+   version="12.1"
+   start="pcie.bar2"
+   end="dma_control_write.Response_Slave">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04000210" />
+ </connection>
 </system>
