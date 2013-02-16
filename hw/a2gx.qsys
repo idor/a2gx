@@ -1,0 +1,817 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system name="$${FILENAME}">
+ <component
+   name="$${FILENAME}"
+   displayName="$${FILENAME}"
+   version="1.0"
+   description=""
+   tags=""
+   categories="System" />
+ <parameter name="bonusData"><![CDATA[bonusData 
+{
+   element $${FILENAME}
+   {
+   }
+   element dma_control_read.CSR
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "50331648";
+         type = "String";
+      }
+   }
+   element dma_control_write.CSR
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "67108864";
+         type = "String";
+      }
+   }
+   element dma_control_read.Descriptor_Slave
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "50331680";
+         type = "String";
+      }
+   }
+   element dma_control_write.Descriptor_Slave
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "67109376";
+         type = "String";
+      }
+   }
+   element clk_125
+   {
+      datum _sortIndex
+      {
+         value = "1";
+         type = "int";
+      }
+   }
+   element clk_50
+   {
+      datum _sortIndex
+      {
+         value = "0";
+         type = "int";
+      }
+   }
+   element ethernet.control_port
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "33570816";
+         type = "String";
+      }
+   }
+   element pcie.cra
+   {
+      datum baseAddress
+      {
+         value = "0";
+         type = "String";
+      }
+   }
+   element dma_control_read
+   {
+      datum _sortIndex
+      {
+         value = "5";
+         type = "int";
+      }
+   }
+   element dma_control_write
+   {
+      datum _sortIndex
+      {
+         value = "6";
+         type = "int";
+      }
+   }
+   element dma_master_read
+   {
+      datum _sortIndex
+      {
+         value = "7";
+         type = "int";
+      }
+   }
+   element dma_master_write
+   {
+      datum _sortIndex
+      {
+         value = "8";
+         type = "int";
+      }
+   }
+   element ethernet
+   {
+      datum _sortIndex
+      {
+         value = "3";
+         type = "int";
+      }
+      datum megawizard_uipreferences
+      {
+         value = "{}";
+         type = "String";
+      }
+   }
+   element on_chip_memory
+   {
+      datum _sortIndex
+      {
+         value = "4";
+         type = "int";
+      }
+   }
+   element pcie
+   {
+      datum _sortIndex
+      {
+         value = "2";
+         type = "int";
+      }
+   }
+   element on_chip_memory.s1
+   {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
+      datum baseAddress
+      {
+         value = "117440512";
+         type = "String";
+      }
+   }
+   element pcie.txs
+   {
+      datum baseAddress
+      {
+         value = "0";
+         type = "String";
+      }
+   }
+}
+]]></parameter>
+ <parameter name="clockCrossingAdapter" value="AUTO" />
+ <parameter name="device" value="EP2AGX260FF35I3" />
+ <parameter name="deviceFamily" value="Arria II GX" />
+ <parameter name="deviceSpeedGrade" value="3" />
+ <parameter name="fabricMode" value="QSYS" />
+ <parameter name="generateLegacySim" value="false" />
+ <parameter name="generationId" value="0" />
+ <parameter name="globalResetBus" value="false" />
+ <parameter name="hdlLanguage" value="VERILOG" />
+ <parameter name="maxAdditionalLatency" value="4" />
+ <parameter name="projectName" value="" />
+ <parameter name="sopcBorderPoints" value="false" />
+ <parameter name="systemHash" value="1" />
+ <parameter name="timeStamp" value="1361032774635" />
+ <parameter name="useTestBenchNamingPattern" value="false" />
+ <instanceScript></instanceScript>
+ <interface name="reset_50" internal="clk_50.clk_in_reset" type="reset" dir="end" />
+ <interface name="clk_125" internal="clk_125.clk_in" type="clock" dir="end" />
+ <interface
+   name="reset_125"
+   internal="clk_125.clk_in_reset"
+   type="reset"
+   dir="end" />
+ <interface name="pcie_refclk" internal="pcie.refclk" type="conduit" dir="end" />
+ <interface name="pcie_test_in" internal="pcie.test_in" type="conduit" dir="end" />
+ <interface
+   name="pcie_pcie_rstn"
+   internal="pcie.pcie_rstn"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pcie_clocks_sim"
+   internal="pcie.clocks_sim"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pcie_reconfig_busy"
+   internal="pcie.reconfig_busy"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pcie_pipe_ext"
+   internal="pcie.pipe_ext"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pcie_test_out"
+   internal="pcie.test_out"
+   type="conduit"
+   dir="end" />
+ <interface name="pcie_rx_in" internal="pcie.rx_in" type="conduit" dir="end" />
+ <interface name="pcie_tx_out" internal="pcie.tx_out" type="conduit" dir="end" />
+ <interface
+   name="pcie_reconfig_togxb"
+   internal="pcie.reconfig_togxb"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pcie_reconfig_fromgxb_0"
+   internal="pcie.reconfig_fromgxb_0"
+   type="conduit"
+   dir="end" />
+ <interface name="pcie_fixedclk" internal="pcie.fixedclk" type="clock" dir="end" />
+ <interface name="clk_50" internal="clk_50.clk_in" type="clock" dir="end" />
+ <interface
+   name="ethernet_conduit_connection"
+   internal="ethernet.conduit_connection"
+   type="conduit"
+   dir="end" />
+ <module kind="clock_source" version="12.1" enabled="1" name="clk_50">
+  <parameter name="clockFrequency" value="50000000" />
+  <parameter name="clockFrequencyKnown" value="true" />
+  <parameter name="inputClockFrequency" value="0" />
+  <parameter name="resetSynchronousEdges" value="NONE" />
+ </module>
+ <module kind="clock_source" version="12.1" enabled="1" name="clk_125">
+  <parameter name="clockFrequency" value="125000000" />
+  <parameter name="clockFrequencyKnown" value="true" />
+  <parameter name="inputClockFrequency" value="0" />
+  <parameter name="resetSynchronousEdges" value="NONE" />
+ </module>
+ <module kind="altera_pcie_hard_ip" version="12.1" enabled="1" name="pcie">
+  <parameter name="under_test" value="0" />
+  <parameter name="INTENDED_DEVICE_FAMILY" value="Arria II GX" />
+  <parameter name="pcie_qsys" value="1" />
+  <parameter name="my_gen2_lane_rate_mode" value="false" />
+  <parameter name="max_link_width" value="4" />
+  <parameter name="p_pcie_txrx_clock" value="100 MHz" />
+  <parameter name="p_pcie_app_clk" value="0" />
+  <parameter name="p_pcie_test_out_width" value="64bits" />
+  <parameter name="no_soft_reset" value="false" />
+  <parameter name="p_pcie_version" value="2.0" />
+  <parameter name="NUM_PREFETCH_MASTERS" value="1" />
+  <parameter name="bar0_io_space" value="false" />
+  <parameter name="bar1_io_space" value="false" />
+  <parameter name="bar2_io_space" value="false" />
+  <parameter name="bar3_io_space" value="false" />
+  <parameter name="bar4_io_space" value="false" />
+  <parameter name="bar5_io_space" value="false" />
+  <parameter name="fixed_address_mode" value="0" />
+  <parameter name="CB_P2A_FIXED_AVALON_ADDR_B0" value="0" />
+  <parameter name="CB_P2A_FIXED_AVALON_ADDR_B1" value="0" />
+  <parameter name="CB_P2A_FIXED_AVALON_ADDR_B2" value="0" />
+  <parameter name="CB_P2A_FIXED_AVALON_ADDR_B3" value="0" />
+  <parameter name="CB_P2A_FIXED_AVALON_ADDR_B4" value="0" />
+  <parameter name="CB_P2A_FIXED_AVALON_ADDR_B5" value="0" />
+  <parameter name="BAR Type">64 bit Prefetchable,Not used,32 bit Non-Prefetchable,Not used,Not used,Not used</parameter>
+  <parameter name="vendor_id" value="4466" />
+  <parameter name="device_id" value="6534" />
+  <parameter name="revision_id" value="1" />
+  <parameter name="class_code" value="2" />
+  <parameter name="subsystem_vendor_id" value="4466" />
+  <parameter name="subsystem_device_id" value="5139" />
+  <parameter name="port_link_number" value="1" />
+  <parameter name="msi_function_count" value="0" />
+  <parameter name="enable_msi_64bit_addressing" value="true" />
+  <parameter name="enable_function_msix_support" value="false" />
+  <parameter name="eie_before_nfts_count" value="4" />
+  <parameter name="enable_completion_timeout_disable" value="false" />
+  <parameter name="completion_timeout" value="NONE" />
+  <parameter name="enable_adapter_half_rate_mode" value="false" />
+  <parameter name="msix_pba_bir" value="0" />
+  <parameter name="msix_pba_offset" value="0" />
+  <parameter name="msix_table_bir" value="0" />
+  <parameter name="msix_table_offset" value="0" />
+  <parameter name="msix_table_size" value="0" />
+  <parameter name="use_crc_forwarding" value="false" />
+  <parameter name="surprise_down_error_support" value="false" />
+  <parameter name="dll_active_report_support" value="false" />
+  <parameter name="bar_io_window_size" value="32BIT" />
+  <parameter name="bar_prefetchable" value="32" />
+  <parameter name="hot_plug_support" value="0" />
+  <parameter name="no_command_completed" value="true" />
+  <parameter name="slot_power_limit" value="0" />
+  <parameter name="slot_power_scale" value="0" />
+  <parameter name="slot_number" value="0" />
+  <parameter name="enable_slot_register" value="false" />
+  <parameter name="link_common_clock" value="1" />
+  <parameter name="advanced_errors" value="false" />
+  <parameter name="enable_ecrc_check" value="false" />
+  <parameter name="enable_ecrc_gen" value="false" />
+  <parameter name="my_advanced_errors" value="false" />
+  <parameter name="my_enable_ecrc_check" value="false" />
+  <parameter name="my_enable_ecrc_gen" value="false" />
+  <parameter name="max_payload_size" value="1" />
+  <parameter name="p_pcie_target_performance_preset" value="Maximum" />
+  <parameter name="credit_buffer_allocation_aux" value="ABSOLUTE" />
+  <parameter name="RX_BUF" value="9" />
+  <parameter name="RH_NUM" value="7" />
+  <parameter name="G_TAG_NUM0" value="32" />
+  <parameter name="endpoint_l0_latency" value="0" />
+  <parameter name="endpoint_l1_latency" value="0" />
+  <parameter name="enable_l1_aspm" value="false" />
+  <parameter name="l01_entry_latency" value="31" />
+  <parameter name="diffclock_nfts_count" value="255" />
+  <parameter name="sameclock_nfts_count" value="255" />
+  <parameter name="l1_exit_latency_sameclock" value="7" />
+  <parameter name="l1_exit_latency_diffclock" value="7" />
+  <parameter name="l0_exit_latency_sameclock" value="7" />
+  <parameter name="l0_exit_latency_diffclock" value="7" />
+  <parameter name="gen2_diffclock_nfts_count" value="255" />
+  <parameter name="gen2_sameclock_nfts_count" value="255" />
+  <parameter name="CG_COMMON_CLOCK_MODE" value="1" />
+  <parameter name="CB_PCIE_MODE" value="0" />
+  <parameter name="AST_LITE" value="0" />
+  <parameter name="CB_PCIE_RX_LITE" value="0" />
+  <parameter name="CG_RXM_IRQ_NUM" value="16" />
+  <parameter name="CG_AVALON_S_ADDR_WIDTH" value="20" />
+  <parameter name="bypass_tl" value="false" />
+  <parameter name="CG_IMPL_CRA_AV_SLAVE_PORT" value="1" />
+  <parameter name="CG_NO_CPL_REORDERING" value="0" />
+  <parameter name="CG_ENABLE_A2P_INTERRUPT" value="0" />
+  <parameter name="CG_IRQ_BIT_ENA" value="65535" />
+  <parameter name="CB_A2P_ADDR_MAP_IS_FIXED" value="0" />
+  <parameter name="CB_A2P_ADDR_MAP_NUM_ENTRIES" value="2" />
+  <parameter name="CB_A2P_ADDR_MAP_PASS_THRU_BITS" value="24" />
+  <parameter name="PCIe Address 63:32">0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000</parameter>
+  <parameter name="PCIe Address 31:0">0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000</parameter>
+  <parameter name="RXM_DATA_WIDTH" value="64" />
+  <parameter name="RXM_BEN_WIDTH" value="8" />
+  <parameter name="CB_TXS_ADDRESS_WIDTH" value="7" />
+  <parameter name="TL_SELECTION" value="1" />
+  <parameter name="pcie_mode" value="SHARED_MODE" />
+  <parameter name="enable_coreclk_out_half_rate" value="false" />
+  <parameter name="low_priority_vc" value="0" />
+  <parameter name="SLAVE_ADDRESS_MAP_0" value="0" />
+  <parameter name="SLAVE_ADDRESS_MAP_1" value="0" />
+  <parameter name="SLAVE_ADDRESS_MAP_2" value="27" />
+  <parameter name="SLAVE_ADDRESS_MAP_3" value="0" />
+  <parameter name="SLAVE_ADDRESS_MAP_4" value="0" />
+  <parameter name="SLAVE_ADDRESS_MAP_5" value="0" />
+  <parameter name="SLAVE_ADDRESS_MAP_1_0" value="27" />
+  <parameter name="SLAVE_ADDRESS_MAP_3_2" value="0" />
+  <parameter name="SLAVE_ADDRESS_MAP_5_4" value="0" />
+  <parameter name="deviceFamily" value="Arria II GX" />
+  <parameter name="AUTO_CAL_BLK_CLK_CLOCK_RATE" value="50000000" />
+  <parameter name="AUTO_CAL_BLK_CLK_CLOCK_DOMAIN" value="2" />
+  <parameter name="AUTO_CAL_BLK_CLK_RESET_DOMAIN" value="2" />
+  <parameter name="AUTO_DEVICE" value="EP2AGX260FF35I3" />
+ </module>
+ <module
+   kind="triple_speed_ethernet"
+   version="12.1"
+   enabled="1"
+   name="ethernet">
+  <parameter name="atlanticSinkClockRate" value="0" />
+  <parameter name="atlanticSinkClockSource" value="unassigned" />
+  <parameter name="atlanticSourceClockRate" value="0" />
+  <parameter name="atlanticSourceClockSource" value="unassigned" />
+  <parameter name="avalonSlaveClockRate" value="0" />
+  <parameter name="avalonSlaveClockSource" value="unassigned" />
+  <parameter name="avalonStNeighbours">unassigned=unassigned</parameter>
+  <parameter name="channel_count" value="1" />
+  <parameter name="core_variation" value="MAC_ONLY" />
+  <parameter name="core_version" value="3073" />
+  <parameter name="crc32check16bit" value="0" />
+  <parameter name="crc32dwidth" value="8" />
+  <parameter name="crc32gendelay" value="6" />
+  <parameter name="crc32s1l2_extern" value="false" />
+  <parameter name="cust_version" value="0" />
+  <parameter name="dataBitsPerSymbol" value="8" />
+  <parameter name="dev_version" value="3073" />
+  <parameter name="deviceFamily" value="ARRIAII" />
+  <parameter name="deviceFamilyName" value="Arria II GX" />
+  <parameter name="eg_addr" value="11" />
+  <parameter name="ena_hash" value="false" />
+  <parameter name="enable_alt_reconfig" value="false" />
+  <parameter name="enable_clk_sharing" value="false" />
+  <parameter name="enable_ena" value="32" />
+  <parameter name="enable_fifoless" value="false" />
+  <parameter name="enable_gmii_loopback" value="false" />
+  <parameter name="enable_hd_logic" value="false" />
+  <parameter name="enable_mac_flow_ctrl" value="false" />
+  <parameter name="enable_mac_txaddr_set" value="true" />
+  <parameter name="enable_mac_vlan" value="false" />
+  <parameter name="enable_maclite" value="false" />
+  <parameter name="enable_magic_detect" value="true" />
+  <parameter name="enable_multi_channel" value="false" />
+  <parameter name="enable_pkt_class" value="true" />
+  <parameter name="enable_pma" value="false" />
+  <parameter name="enable_ptp_1step" value="false" />
+  <parameter name="enable_reg_sharing" value="false" />
+  <parameter name="enable_sgmii" value="false" />
+  <parameter name="enable_shift16" value="false" />
+  <parameter name="enable_sup_addr" value="false" />
+  <parameter name="enable_timestamping" value="false" />
+  <parameter name="enable_use_internal_fifo" value="true" />
+  <parameter name="export_calblkclk" value="false" />
+  <parameter name="export_pwrdn" value="false" />
+  <parameter name="ext_stat_cnt_ena" value="false" />
+  <parameter name="gigeAdvanceMode" value="true" />
+  <parameter name="ifGMII" value="RGMII" />
+  <parameter name="ifPCSuseEmbeddedSerdes" value="false" />
+  <parameter name="ing_addr" value="11" />
+  <parameter name="insert_ta" value="true" />
+  <parameter name="maclite_gige" value="false" />
+  <parameter name="max_channels" value="1" />
+  <parameter name="mdio_clk_div" value="50" />
+  <parameter name="phy_identifier" value="0" />
+  <parameter name="ramType" value="AUTO" />
+  <parameter name="reset_level" value="1" />
+  <parameter name="starting_channel_number" value="0" />
+  <parameter name="stat_cnt_ena" value="true" />
+  <parameter name="timingAdapterName" value="timingAdapter" />
+  <parameter name="toolContext" value="SOPC_BUILDER" />
+  <parameter name="transceiver_type" value="GXB" />
+  <parameter name="tstamp_fp_width" value="4" />
+  <parameter name="uiHostClockFrequency" value="0" />
+  <parameter name="uiMDIOFreq" value="0.0 MHz" />
+  <parameter name="useLvds" value="false" />
+  <parameter name="useMAC" value="true" />
+  <parameter name="useMDIO" value="true" />
+  <parameter name="usePCS" value="false" />
+  <parameter name="use_sync_reset" value="true" />
+ </module>
+ <module
+   kind="altera_avalon_onchip_memory2"
+   version="12.1"
+   enabled="1"
+   name="on_chip_memory">
+  <parameter name="allowInSystemMemoryContentEditor" value="false" />
+  <parameter name="autoInitializationFileName">$${FILENAME}_on_chip_memory</parameter>
+  <parameter name="blockType" value="AUTO" />
+  <parameter name="dataWidth" value="64" />
+  <parameter name="deviceFamily" value="Arria II GX" />
+  <parameter name="dualPort" value="false" />
+  <parameter name="initMemContent" value="false" />
+  <parameter name="initializationFileName" value="on_chip_memory" />
+  <parameter name="instanceID" value="NONE" />
+  <parameter name="memorySize" value="262144" />
+  <parameter name="readDuringWriteMode" value="DONT_CARE" />
+  <parameter name="simAllowMRAMContentsFile" value="false" />
+  <parameter name="simMemInitOnlyFilename" value="0" />
+  <parameter name="singleClockOperation" value="false" />
+  <parameter name="slave1Latency" value="1" />
+  <parameter name="slave2Latency" value="1" />
+  <parameter name="useNonDefaultInitFile" value="false" />
+  <parameter name="useShallowMemBlocks" value="false" />
+  <parameter name="writable" value="true" />
+ </module>
+ <module
+   kind="modular_sgdma_dispatcher"
+   version="1.0"
+   enabled="1"
+   name="dma_control_read">
+  <parameter name="MODE" value="1" />
+  <parameter name="GUI_RESPONSE_PORT" value="0" />
+  <parameter name="DESCRIPTOR_FIFO_DEPTH" value="256" />
+  <parameter name="ENHANCED_FEATURES" value="0" />
+  <parameter name="CSR_ADDRESS_WIDTH" value="3" />
+  <parameter name="AUTO_CLOCK_CLOCK_RATE" value="125000000" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Arria II GX" />
+ </module>
+ <module
+   kind="modular_sgdma_dispatcher"
+   version="1.0"
+   enabled="1"
+   name="dma_control_write">
+  <parameter name="MODE" value="2" />
+  <parameter name="GUI_RESPONSE_PORT" value="0" />
+  <parameter name="DESCRIPTOR_FIFO_DEPTH" value="256" />
+  <parameter name="ENHANCED_FEATURES" value="0" />
+  <parameter name="CSR_ADDRESS_WIDTH" value="3" />
+  <parameter name="AUTO_CLOCK_CLOCK_RATE" value="125000000" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Arria II GX" />
+ </module>
+ <module
+   kind="dma_read_master"
+   version="1.0"
+   enabled="1"
+   name="dma_master_read">
+  <parameter name="DATA_WIDTH" value="32" />
+  <parameter name="LENGTH_WIDTH" value="25" />
+  <parameter name="FIFO_DEPTH" value="256" />
+  <parameter name="STRIDE_ENABLE" value="0" />
+  <parameter name="GUI_STRIDE_WIDTH" value="1" />
+  <parameter name="BURST_ENABLE" value="1" />
+  <parameter name="GUI_MAX_BURST_COUNT" value="32" />
+  <parameter name="GUI_PROGRAMMABLE_BURST_ENABLE" value="0" />
+  <parameter name="GUI_BURST_WRAPPING_SUPPORT" value="1" />
+  <parameter name="TRANSFER_TYPE">Full Word Accesses Only</parameter>
+  <parameter name="PACKET_ENABLE" value="1" />
+  <parameter name="ERROR_ENABLE" value="1" />
+  <parameter name="ERROR_WIDTH" value="1" />
+  <parameter name="CHANNEL_ENABLE" value="0" />
+  <parameter name="CHANNEL_WIDTH" value="8" />
+  <parameter name="ADDRESS_WIDTH" value="25" />
+  <parameter name="FIFO_SPEED_OPTIMIZATION" value="1" />
+  <parameter name="AUTO_CLOCK_CLOCK_RATE" value="125000000" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Arria II GX" />
+ </module>
+ <module
+   kind="dma_write_master"
+   version="1.0"
+   enabled="1"
+   name="dma_master_write">
+  <parameter name="DATA_WIDTH" value="32" />
+  <parameter name="LENGTH_WIDTH" value="25" />
+  <parameter name="FIFO_DEPTH" value="256" />
+  <parameter name="STRIDE_ENABLE" value="0" />
+  <parameter name="GUI_STRIDE_WIDTH" value="1" />
+  <parameter name="BURST_ENABLE" value="1" />
+  <parameter name="GUI_MAX_BURST_COUNT" value="32" />
+  <parameter name="GUI_PROGRAMMABLE_BURST_ENABLE" value="0" />
+  <parameter name="GUI_BURST_WRAPPING_SUPPORT" value="1" />
+  <parameter name="TRANSFER_TYPE">Full Word Accesses Only</parameter>
+  <parameter name="PACKET_ENABLE" value="1" />
+  <parameter name="ERROR_ENABLE" value="1" />
+  <parameter name="ERROR_WIDTH" value="6" />
+  <parameter name="ADDRESS_WIDTH" value="25" />
+  <parameter name="FIFO_SPEED_OPTIMIZATION" value="1" />
+  <parameter name="AUTO_CLOCK_CLOCK_RATE" value="125000000" />
+  <parameter name="AUTO_DEVICE_FAMILY" value="Arria II GX" />
+ </module>
+ <connection
+   kind="avalon"
+   version="12.1"
+   start="pcie.bar1_0"
+   end="on_chip_memory.s1">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x07000000" />
+ </connection>
+ <connection kind="avalon" version="12.1" start="pcie.bar2" end="pcie.cra">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+ </connection>
+ <connection kind="clock" version="12.1" start="clk_50.clk" end="pcie.cal_blk_clk" />
+ <connection
+   kind="clock"
+   version="12.1"
+   start="clk_50.clk"
+   end="pcie.reconfig_gxbclk" />
+ <connection
+   kind="clock"
+   version="12.1"
+   start="pcie.pcie_core_clk"
+   end="on_chip_memory.clk1" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_50.clk_reset"
+   end="on_chip_memory.reset1" />
+ <connection
+   kind="avalon"
+   version="12.1"
+   start="pcie.bar2"
+   end="ethernet.control_port">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x02004000" />
+ </connection>
+ <connection
+   kind="clock"
+   version="12.1"
+   start="pcie.pcie_core_clk"
+   end="ethernet.control_port_clock_connection" />
+ <connection
+   kind="clock"
+   version="12.1"
+   start="pcie.pcie_core_clk"
+   end="dma_control_read.clock" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_125.clk_reset"
+   end="dma_control_read.clock_reset" />
+ <connection
+   kind="avalon"
+   version="12.1"
+   start="pcie.bar2"
+   end="dma_control_read.CSR">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x03000000" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="12.1"
+   start="pcie.bar2"
+   end="dma_control_read.Descriptor_Slave">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x03000020" />
+ </connection>
+ <connection
+   kind="clock"
+   version="12.1"
+   start="pcie.pcie_core_clk"
+   end="dma_control_write.clock" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_125.clk_reset"
+   end="dma_control_write.clock_reset" />
+ <connection
+   kind="avalon"
+   version="12.1"
+   start="pcie.bar2"
+   end="dma_control_write.CSR">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04000000" />
+ </connection>
+ <connection
+   kind="avalon"
+   version="12.1"
+   start="pcie.bar2"
+   end="dma_control_write.Descriptor_Slave">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x04000200" />
+ </connection>
+ <connection
+   kind="clock"
+   version="12.1"
+   start="pcie.pcie_core_clk"
+   end="dma_master_read.Clock" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_125.clk_reset"
+   end="dma_master_read.Clock_reset" />
+ <connection
+   kind="avalon_streaming"
+   version="12.1"
+   start="dma_control_read.Read_Command_Source"
+   end="dma_master_read.Command_Sink" />
+ <connection
+   kind="avalon_streaming"
+   version="12.1"
+   start="dma_master_read.Response_Source"
+   end="dma_control_read.Read_Response_Sink" />
+ <connection
+   kind="avalon_streaming"
+   version="12.1"
+   start="dma_master_read.Data_Source"
+   end="ethernet.transmit" />
+ <connection
+   kind="avalon"
+   version="12.1"
+   start="dma_master_read.Data_Read_Master"
+   end="pcie.txs">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+ </connection>
+ <connection
+   kind="clock"
+   version="12.1"
+   start="pcie.pcie_core_clk"
+   end="dma_master_write.Clock" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_125.clk_reset"
+   end="dma_master_write.Clock_reset" />
+ <connection
+   kind="avalon_streaming"
+   version="12.1"
+   start="dma_master_write.Response_Source"
+   end="dma_control_write.Write_Response_Sink" />
+ <connection
+   kind="avalon_streaming"
+   version="12.1"
+   start="dma_control_write.Write_Command_Source"
+   end="dma_master_write.Command_Sink" />
+ <connection
+   kind="avalon_streaming"
+   version="12.1"
+   start="ethernet.receive"
+   end="dma_master_write.Data_Sink" />
+ <connection
+   kind="avalon"
+   version="12.1"
+   start="dma_master_write.Data_Write_Master"
+   end="pcie.txs">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+ </connection>
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_125.clk_reset"
+   end="ethernet.reset_connection" />
+ <connection
+   kind="clock"
+   version="12.1"
+   start="pcie.pcie_core_clk"
+   end="ethernet.receive_clock_connection" />
+ <connection
+   kind="clock"
+   version="12.1"
+   start="pcie.pcie_core_clk"
+   end="ethernet.transmit_clock_connection" />
+ <connection
+   kind="interrupt"
+   version="12.1"
+   start="pcie.rxm_irq"
+   end="dma_control_read.csr_irq">
+  <parameter name="irqNumber" value="1" />
+ </connection>
+ <connection
+   kind="interrupt"
+   version="12.1"
+   start="pcie.rxm_irq"
+   end="dma_control_write.csr_irq">
+  <parameter name="irqNumber" value="2" />
+ </connection>
+ <connection
+   kind="interrupt"
+   version="12.1"
+   start="pcie.rxm_irq"
+   end="pcie.cra_irq">
+  <parameter name="irqNumber" value="0" />
+ </connection>
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_50.clk_reset"
+   end="ethernet.reset_connection" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="pcie.pcie_core_reset"
+   end="ethernet.reset_connection" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_125.clk_reset"
+   end="on_chip_memory.reset1" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="pcie.pcie_core_reset"
+   end="on_chip_memory.reset1" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_50.clk_reset"
+   end="dma_control_read.clock_reset" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="pcie.pcie_core_reset"
+   end="dma_control_read.clock_reset" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_50.clk_reset"
+   end="dma_control_write.clock_reset" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="pcie.pcie_core_reset"
+   end="dma_control_write.clock_reset" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_50.clk_reset"
+   end="dma_master_read.Clock_reset" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="pcie.pcie_core_reset"
+   end="dma_master_read.Clock_reset" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="clk_50.clk_reset"
+   end="dma_master_write.Clock_reset" />
+ <connection
+   kind="reset"
+   version="12.1"
+   start="pcie.pcie_core_reset"
+   end="dma_master_write.Clock_reset" />
+</system>

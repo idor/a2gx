@@ -1,3 +1,1 @@
-Arria II GX NIC
-===
-
+Arria II GX (EP2AGX260FF35I3)
