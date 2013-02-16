@@ -26,30 +26,31 @@
 
 module a2gx_top
   (// Clock & Reset Signals
-   input        clk_top_100_p,
-   input        clk_top_125_p,
-   input        global_reset_n,
+   input            clk_top_100_p,
+   input            clk_top_125_p,
+   input            global_reset_n,
    // PCI Express Signals
-	input        pcie_rstn,
-	input        pcie_refclk,
-	input        pcie_rx_in0,
-	input        pcie_rx_in1,
-	input        pcie_rx_in2,
-	input        pcie_rx_in3,
-	output       pcie_tx_out0,
-	output       pcie_tx_out1,
-	output       pcie_tx_out2,
-	output       pcie_tx_out3,
+	input            pcie_rstn,
+	input            pcie_refclk,
+	input            pcie_rx_in0,
+	input            pcie_rx_in1,
+	input            pcie_rx_in2,
+	input            pcie_rx_in3,
+	output           pcie_tx_out0,
+	output           pcie_tx_out1,
+	output           pcie_tx_out2,
+	output           pcie_tx_out3,
+   output reg [3:0] pcie_led,
    // Ethernet Signals
-   input        eth_rx_clk,
-   input        eth_rx_ctrl,
-   output       eth_tx_clk,
-   output       eth_tx_ctrl,
-   input [3:0]  eth_rgmii_in,
-   output [3:0] eth_rgmii_out,
-   output       eth_reset_n,
-   output       eth_mdc,
-   inout        eth_mdio);
+   input            eth_rx_clk,
+   input            eth_rx_ctrl,
+   output           eth_tx_clk,
+   output           eth_tx_ctrl,
+   input [3:0]      eth_rgmii_in,
+   output [3:0]     eth_rgmii_out,
+   output           eth_reset_n,
+   output           eth_mdc,
+   inout            eth_mdio);
 
    wire   clk_50;
    wire   clk_125;
@@ -63,7 +64,8 @@ module a2gx_top
    wire        eth_mdio_out;
    wire        eth_mdio_oen;
 
-   wire        eth_mac_tx_clk;
+	wire [63:0] test_out_icm;
+	wire [39:0] test_in;
 
    assign eth_reset_n = global_reset_n;
 
@@ -108,7 +110,7 @@ module a2gx_top
       .ethernet_conduit_connection_rgmii_out(eth_rgmii_out),
       .ethernet_conduit_connection_rx_control(eth_rx_ctrl),
       .ethernet_conduit_connection_tx_control(eth_tx_ctrl),
-      .ethernet_conduit_connection_tx_clk(eth_mac_tx_clk),
+      .ethernet_conduit_connection_tx_clk(clk_125),
       .ethernet_conduit_connection_rx_clk(eth_rx_clk),
       .ethernet_conduit_connection_set_10(1'b0),
       .ethernet_conduit_connection_set_1000(1'b1),
@@ -124,7 +126,7 @@ module a2gx_top
 		.datain_h(1'b1),
 		.datain_l(1'b0),
 		.oe(1'b1),
-		.outclock(eth_mac_tx_clk),
+		.outclock(clk_125),
 		.outclocken(1'b1),
 		.dataout(eth_tx_clk),
 		.aset(1'b0),
@@ -140,5 +142,13 @@ module a2gx_top
 	  eth_tx_clk_ddio.oe_reg = "UNREGISTERED",
 	  eth_tx_clk_ddio.power_up_high = "OFF",
 	  eth_tx_clk_ddio.width = 1;
+
+   always @(posedge clk_125 or negedge global_reset_n) begin
+      if (global_reset_n == 1'b0) begin
+         pcie_led[3:0] <= 4'b0;
+      end else begin
+         pcie_led[3:0] <= ~(test_out_icm[28:25]);
+      end
+   end
 
 endmodule

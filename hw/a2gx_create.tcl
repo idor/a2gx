@@ -90,6 +90,13 @@ set_location_assignment PIN_AL7 -to global_reset_n
 set_instance_assignment -name IO_STANDARD "1.8 V" -to global_reset_n
 set_instance_assignment -name IO_MAXIMUM_TOGGLE_RATE "0 MHz" -to global_reset_n
 
+# PCIe LEDs
+set_location_assignment PIN_E1 -to pcie_led[0]
+set_location_assignment PIN_R9 -to pcie_led[1]
+set_location_assignment PIN_H3 -to pcie_led[2]
+set_location_assignment PIN_D2 -to pcie_led[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to lane_active_led
+
 # Ethernet RGMII
 set_location_assignment PIN_D25 -to eth_tx_clk
 set_location_assignment PIN_V6 -to eth_rx_clk

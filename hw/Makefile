@@ -40,7 +40,7 @@ QSYS_TOP = $(PROJECT_NAME).qsys
 QSYS_QIP = $(BUILD_DIR)/$(PROJECT_NAME).qip
 
 export RTL_FILES = $(wildcard *.v)
-export QIP_FILES = $(QSYS_QIP)
+export QIP_FILES = $(QSYS_QIP) $(wildcard $(PROJECT_DIR)/qip/*.qip)
 
 # Quartus II Project Generation
 $(PRJ_FILE): $(SETUP_SCRIPT) $(SDC_FILE)
