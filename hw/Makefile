@@ -24,11 +24,15 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-PROJECT_DIR := $(PWD)
-BUILD_DIR := $(PROJECT_DIR)/build
+MAKEFLAGS += --no-builtin-rules
 
-QSYS_TOP  := a2gx.qsys
-QSYS_QIP  := $(BUILD_DIR)/a2gx.qip
+PROJECT_DIR := $(PWD)
+
+PROJECT_NAME = a2gx
+BUILD_DIR = $(PROJECT_DIR)/build
+
+QSYS_TOP = $(PROJECT_NAME).qsys
+QSYS_QIP = $(BUILD_DIR)/$(PROJECT_NAME).qip
 
 generate_qsys: $(QSYS_QIP)
 
@@ -42,4 +46,6 @@ $(QSYS_QIP): $(QSYS_TOP)
 		--system-info=DEVICE_SPEEDGRADE=3 \
 		--system-info=GENERATION_ID=0 \
 		--component-file=$(QSYS_TOP) \
-		--report-file=qip:$(QSYS_QIP)
+		--output-name=$(PROJECT_NAME)_qsys \
+		--report-file=qip:$(QSYS_QIP) \
+		--report-file=html:$(BUILD_DIR)/$(PROJECT_NAME)_report.html
