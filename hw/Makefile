@@ -28,12 +28,26 @@ MAKEFLAGS += --no-builtin-rules
 
 PROJECT_DIR := $(PWD)
 
-PROJECT_NAME = a2gx
+export PROJECT_NAME = a2gx
+
+SETUP_SCRIPT = $(PROJECT_NAME)_create.tcl
+SDC_FILE = $(PROJECT_NAME).sdc
+PRJ_FILE = $(PROJECT_NAME).prj
+
 BUILD_DIR = $(PROJECT_DIR)/build
 
 QSYS_TOP = $(PROJECT_NAME).qsys
 QSYS_QIP = $(BUILD_DIR)/$(PROJECT_NAME).qip
 
+export RTL_FILES = $(wildcard *.v)
+export QIP_FILES = $(QSYS_QIP)
+
+# Quartus II Project Generation
+$(PRJ_FILE): $(SETUP_SCRIPT) $(SDC_FILE)
+	quartus_sh -t $(SETUP_SCRIPT)
+	@touch $(PRJ_FILE)
+
+# QSys System Generation
 generate_qsys: $(QSYS_QIP)
 
 $(QSYS_QIP): $(QSYS_TOP)

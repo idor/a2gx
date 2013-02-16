@@ -1,2 +1,6 @@
-.qsys_edit
+hw/.qsys_edit
 hw/build
+hw/*.prj
+hw/*.qpf
+hw/*.qsf
+hw/db
