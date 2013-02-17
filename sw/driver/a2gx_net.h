@@ -32,4 +32,7 @@ struct a2gx_dev;
 struct a2gx_dev *a2gx_net_alloc(struct pci_dev *dev);
 void a2gx_net_free(struct a2gx_dev *dev);
 
+int a2gx_net_init(struct a2gx_dev *dev);
+void a2gx_net_fini(struct a2gx_dev *dev);
+
 #endif

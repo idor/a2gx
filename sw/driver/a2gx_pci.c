@@ -112,6 +112,12 @@ static int probe(struct pci_dev *pci_dev, const struct pci_device_id *pci_id)
         goto on_err;
     }
 
+    r = a2gx_net_init(dev);
+    if (r) {
+        err_msg = "Cannot initialize network device";
+        goto on_err;
+    }
+
     printk(A2GX_INFO
            "Device 0x%x at bus %d dev %d func %d initialized.\n"
            "\t[bar0=%p, bar2=%p, dma_mask=0x%x]\n",
@@ -122,6 +128,7 @@ static int probe(struct pci_dev *pci_dev, const struct pci_device_id *pci_id)
     return r;
 
   on_err:
+    a2gx_dma_fini(dev);
     a2gx_net_free(dev);
     printk(A2GX_ERR "Device probe failed (%d): %s\n", r, err_msg);
     return r;
@@ -135,6 +142,8 @@ static void remove(struct pci_dev *pci_dev)
     pci_set_drvdata(pci_dev, NULL);
     if (!dev)
         goto pci_disable;
+    a2gx_net_fini(dev);
+    a2gx_dma_fini(dev);
     unmap_io_bars(dev);
     a2gx_net_free(dev);
   pci_disable:

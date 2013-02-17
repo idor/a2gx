@@ -25,6 +25,7 @@
  */
 
 #include <linux/etherdevice.h>
+#include "a2gx.h"
 #include "a2gx_device.h"
 #include "a2gx_net.h"
 
@@ -48,4 +49,66 @@ struct a2gx_dev *a2gx_net_alloc(struct pci_dev *pci_dev)
 void a2gx_net_free(struct a2gx_dev *dev)
 {
     free_netdev(dev->net_dev);
+}
+
+static int net_open(struct net_device *dev)
+{
+    printk(A2GX_INFO "OPEN!!!\n");
+    netif_start_queue(dev);
+    netif_wake_queue(dev);
+    return 0;
+}
+
+static int net_stop(struct net_device *dev)
+{
+    printk(A2GX_INFO "STOP!!!\n");
+    netif_stop_queue(dev);
+    return 0;
+}
+
+static int net_start_xmit(struct sk_buff *skb, struct net_device *dev)
+{
+    printk(KERN_INFO "a2gx_net_start_xmit is called\n");
+    dev_kfree_skb(skb);
+    return 0;
+}
+
+static struct net_device_stats *net_get_stats(struct net_device *net_dev)
+{
+    struct a2gx_dev *dev;
+
+    printk(KERN_INFO "a2gx_net_get_stats is called\n");
+    dev = netdev_priv(net_dev);
+    return &dev->net_stats;
+}
+
+static const struct net_device_ops net_ops =
+{
+    .ndo_open = net_open,
+    .ndo_stop = net_stop,
+    .ndo_start_xmit = net_start_xmit,
+    .ndo_get_stats = net_get_stats
+};
+
+int a2gx_net_init(struct a2gx_dev *dev)
+{
+    struct net_device *net_dev = dev->net_dev;
+    unsigned int i;
+
+    /* dev_addr is already set by MAC initialization */
+    for (i = 0; i < 6; i++) {
+        net_dev->broadcast[i] = 0xff;
+    }
+    net_dev->hard_header_len = 0;
+    net_dev->netdev_ops = &net_ops;
+    if (register_netdev(net_dev)) {
+        printk(A2GX_ERR "Cannot register network device\n");
+        return -1;
+    }
+    return 0;
+}
+
+void a2gx_net_fini(struct a2gx_dev *dev)
+{
+    unregister_netdev(dev->net_dev);
 }

@@ -24,36 +24,91 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <linux/pci.h>
+#include "a2gx.h"
 #include "a2gx_device.h"
 #include "a2gx_dma.h"
 
+#define A2GX_DMA_BASE 0x0
+#define A2GX_DMA_A2P_BASE 0x1000
+
+#define A2GX_DMA_R_BASE 0x03000000
+#define A2GX_DMA_W_BASE 0x04000000
+
+#define A2GX_DMA_R_DESC_BASE (A2GX_DMA_R_BASE + 0x20)
+#define A2GX_DMA_W_DESC_BASE (A2GX_DMA_W_BASE + 0x20)
+
+#define A2GX_DMA_CSR_STATUS_REG 0x0
+#define A2GX_DMA_CSR_CONTROL_REG 0x1
+
+#define A2GX_DMA_CSR_STATUS_BUSY (1<<0)
+#define A2GX_DMA_CSR_STATUS_EMPTY (1<<1)
+#define A2GX_DMA_CSR_STATUS_FULL (1<<2)
+#define A2GX_DMA_CSR_STATUS_RESP_EMPTY (1<<3)
+#define A2GX_DMA_CSR_STATUS_RESP_FULL (1<<4)
+#define A2GX_DMA_CSR_STATUS_STOP (1<<5)
+#define A2GX_DMA_CSR_STATUS_RESET (1<<6)
+#define A2GX_DMA_CSR_STATUS_STOP_ON_ERR (1<<7)
+#define A2GX_DMA_CSR_STATUS_STOP_ON_TERM (1<<8)
+#define A2GX_DMA_CSR_STATUS_IRQ (1<<9)
+#define A2GX_DMA_CSR_CONTROL_RESET_MASK (1<<1)
+
+#define A2GX_MAX_BUF_SIZE 1048576 /* 1 MB */
+
+u32 read_status(u32 __iomem *csr_base)
+{
+    u32 status;
+    status = ioread32(csr_base + A2GX_DMA_CSR_STATUS_REG);
+    rmb();
+    return status;
+}
+
 int a2gx_dma_init(struct a2gx_dev *dev)
 {
-    void __iomem *mem = dev->bar2 + A2GX_DMA_BASE + A2GX_DMA_A2P_REG;
+    void __iomem *base = (dev->bar2 + A2GX_DMA_BASE);
 
-    iowrite32(0xFFFFFFFC, mem);
+    iowrite32(0xFFFFFFFC, base + A2GX_DMA_A2P_BASE);
     wmb();
-    dev->dma_mask = ioread32(mem);
+    dev->dma_mask = ioread32(base + A2GX_DMA_A2P_BASE);
     rmb();
     if (!dev->dma_mask)
         goto on_err;
     a2gx_dma_reset(dev);
+
+    dev->ring_buf = pci_alloc_consistent(
+        dev->pci_dev, 1024, &dev->ring_buf_dma);
+    if (!dev->ring_buf) {
+        printk(A2GX_ERR "Cannot allocate ring buffers.\n");
+        return -ENOMEM;
+    }
+
     return 0;
   on_err:
     return -1;
 }
 
+void a2gx_dma_fini(struct a2gx_dev *dev)
+{
+    a2gx_dma_reset(dev);
+    if (dev->ring_buf) {
+        pci_free_consistent(dev->pci_dev, 1024,
+                            dev->ring_buf, dev->ring_buf_dma);
+    }
+}
+
 void a2gx_dma_reset_reader(struct a2gx_dev *dev)
 {
-    u32 *base = dev->bar2 + A2GX_DMA_R_BASE;
-    iowrite32(A2GX_DMA_CSR_RESET_MASK, base + A2GX_DMA_CSR_REG);
+    u32 __iomem *base = dev->bar2 + A2GX_DMA_R_BASE;
+    iowrite32(A2GX_DMA_CSR_CONTROL_RESET_MASK,
+              (base + A2GX_DMA_CSR_CONTROL_REG));
     wmb();
 }
 
 void a2gx_dma_reset_writer(struct a2gx_dev *dev)
 {
-    u32 *base = dev->bar2 + A2GX_DMA_W_BASE;
-    iowrite32(A2GX_DMA_CSR_RESET_MASK, (base + A2GX_DMA_CSR_REG));
+    u32 __iomem *base = dev->bar2 + A2GX_DMA_W_BASE;
+    iowrite32(A2GX_DMA_CSR_CONTROL_RESET_MASK,
+              (base + A2GX_DMA_CSR_CONTROL_REG));
     wmb();
 }
 
@@ -61,4 +116,15 @@ void a2gx_dma_reset(struct a2gx_dev *dev)
 {
     a2gx_dma_reset_reader(dev);
     a2gx_dma_reset_writer(dev);
+}
+
+int a2gx_dma_write(struct a2gx_dev *dev, void *addr, u32 len)
+{
+    u32 ctrl;
+
+    ctrl = read_status(dev->bar2 + A2GX_DMA_W_BASE);
+    if (ctrl & A2GX_DMA_CSR_STATUS_FULL)
+        return -EAGAIN;
+    // TODO: Write descriptor, issue GO.
+    return 0;
 }

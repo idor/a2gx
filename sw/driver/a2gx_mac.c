@@ -25,6 +25,7 @@
  */
 
 #include <linux/dmi.h>
+#include <linux/netdevice.h>
 #include "a2gx.h"
 #include "a2gx_device.h"
 #include "a2gx_mac.h"
@@ -276,20 +277,20 @@ static void write_mac_addr(u32 __iomem *base, const unsigned char mac_addr[6])
     wmb();
 }
 
-static void init_mac(u32 __iomem *base)
+static void init_mac(u32 __iomem *base, struct net_device *net_dev)
 {
     u32 cfg;
     unsigned char mac_addr[6];
     generate_mac(mac_addr);
     write_mac_addr(base, mac_addr);
     cfg = mac_read_cfg(base);
-
     cfg |= MAC_CMD_TX_ENA;
     cfg |= MAC_CMD_RX_ENA;
     cfg |= MAC_CMD_ETH_SPEED; /* Gigabit Mode */
     cfg |= MAC_CMD_PAUSE_IGNORE;
     cfg |= MAC_CMD_CNT_RESET;
     mac_write_cfg(base, cfg);
+    memcpy(net_dev->dev_addr, mac_addr, sizeof(mac_addr));
 }
 
 int a2gx_mac_init(struct a2gx_dev *dev)
@@ -328,7 +329,7 @@ int a2gx_mac_init(struct a2gx_dev *dev)
     /*
      * Finish MAC configuration and enable RX/TX.
      */
-    init_mac(base);
+    init_mac(base, dev->net_dev);
 
     read_rev(base, &rev);
     frm_len = ioread32(base + A2GX_MAC_FRM_LEN_REG);

@@ -28,6 +28,7 @@
 #define A2GX_DEVICE_H
 
 #include <linux/io.h>
+#include <linux/netdevice.h>
 
 struct pci_dev;
 struct net_device;
@@ -35,9 +36,12 @@ struct net_device;
 struct a2gx_dev {
     void __iomem *bar0;
     void __iomem *bar2;
+    unsigned char *ring_buf;
+    dma_addr_t ring_buf_dma;
     u32 dma_mask;
     struct pci_dev *pci_dev;
     struct net_device *net_dev;
+    struct net_device_stats net_stats;
 };
 
 #endif
