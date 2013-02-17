@@ -85,7 +85,7 @@ static int test_scratch(u32 __iomem *base)
     return -1;
 }
 
-static void reset(u32 __iomem *base)
+static void mac_reset(u32 __iomem *base)
 {
     u32 __iomem *reg;
     u32 cmd;
@@ -93,16 +93,11 @@ static void reset(u32 __iomem *base)
     reg = base + A2GX_MAC_CMD_CFG_REG;
     cmd = ioread32(reg);
     rmb();
-
-    cmd &= (~MAC_CMD_RX_ENA);
-    cmd &= (~MAC_CMD_TX_ENA);
-    cmd |= MAC_CMD_SW_RESET;
-
-    iowrite32(cmd, reg);
+    iowrite32(cmd | MAC_CMD_SW_RESET, reg);
     wmb();
 }
 
-static int is_resetting(u32 __iomem *base)
+static int mac_in_reset(u32 __iomem *base)
 {
     u32 __iomem *reg;
     u32 cmd;
@@ -112,29 +107,133 @@ static int is_resetting(u32 __iomem *base)
     return (cmd & MAC_CMD_SW_RESET);
 }
 
+static int mac_wait_for_reset_completion(u32 __iomem *base)
+{
+    unsigned int i;
+    for (i = 0; i < 50; ++i) {
+        if (!mac_in_reset(base))
+            break;
+    }
+    return mac_in_reset(base) ? -1 : 0;
+}
+
+static void phy_sw_reset(u32 __iomem *base)
+{
+    u32 ctrl;
+    ctrl = ioread32(base + A2GX_PHY_CTRL_REG);
+    rmb();
+    iowrite32(ctrl | 0x8000, base + A2GX_PHY_CTRL_REG);
+    wmb();
+}
+
+/*
+ * Initialize Marvell PHY. Since we don't have a spec for that PHY,
+ * the logic is ported from Altera's "N647_TSE_Single_Port_RGMI_Dev_AIIGX_ACDS"
+ * reference design for Arria II GX Board (tse_marvell_phy.tcl).
+ */
+static void init_phy(u32 __iomem *base)
+{
+    u32 v;
+    unsigned int i;
+
+    /* Initialize Control (REG 0) */
+    v = ioread32(base + A2GX_PHY_CTRL_REG);
+    rmb();
+
+    v &= 0x8EBF; /* Reset */
+    v |= 0x0040; /* Enable Speed 1000 */
+    v |= 0x0100; /* Enable Full Duplex Mode */
+    iowrite32(v, base + A2GX_PHY_CTRL_REG);
+    wmb();
+
+    phy_sw_reset(base);
+
+    /* AN Advertisement Register (REG 4) */
+    v = ioread32(base + A2GX_PHY_AUTO_NEG);
+    rmb();
+
+    iowrite32(v & 0xFE1F, base + A2GX_PHY_AUTO_NEG);
+    wmb();
+    phy_sw_reset(base);
+
+    /* 1000BASE-T Control Register (REG 9) */
+    v = ioread32(base + A2GX_PHY_1000BASE_T_CONTROL);
+    rmb();
+    iowrite32(v & 0xFCFF, base + A2GX_PHY_1000BASE_T_CONTROL);
+    wmb();
+    phy_sw_reset(base);
+
+    /* PHYSpecific Control Register (REG 16).
+       Set PHY Synchronizing FIFO to maximum */
+    v = ioread32(base + A2GX_PHY_SPEC_CONTROL);
+    rmb();
+
+    iowrite32(v | 0xC000, base + A2GX_PHY_SPEC_CONTROL);
+    wmb();
+    phy_sw_reset(base);
+
+    /* Extended PHYSpecific Status Register (REG 27).
+       Set PHY HWCFG_MODE for RGMII to Copper. */
+    v = ioread32(base + A2GX_PHY_SPEC_STATUS_EXT);
+    rmb();
+    iowrite32(v | 0x000B, base + A2GX_PHY_SPEC_STATUS_EXT);
+    wmb();
+    phy_sw_reset(base);
+
+    /* Extended PHYSpecific Control Register (REG 20).
+       Enable RGMII TX and RX Timing Control. */
+    v = ioread32(base + A2GX_PHY_SPEC_CONTROL_EXT);
+    rmb();
+
+    v &= 0xFF7D;
+    v |= 0x0082;
+    iowrite32(v, base + A2GX_PHY_SPEC_CONTROL_EXT);
+    wmb();
+    phy_sw_reset(base);
+}
+
+static int phy_link_is_up(u32 __iomem *base)
+{
+    /* PHY Specific Status Register (REG 17). Wait for Link Up. */
+    u32 status;
+    status = ioread32(base + A2GX_PHY_SPEC_STATUS);
+    rmb();
+    return ((status & 0x0400) == 0x00000400);
+}
+
 int a2gx_mac_init(struct a2gx_dev *dev)
 {
     struct revision_info rev;
     u32 __iomem *base;
     u32 frm_len;
-    unsigned int i;
 
     base = (dev->bar2 + A2GX_MAC_BASE);
 
-    reset(base);
-    for (i = 0; i < 50; ++i) {
-        if (!is_resetting(base))
-            break;
-    }
-    if (is_resetting(base)) {
-        printk(A2GX_ERR "MAC stuck in reset.\n");
-        goto on_err;
-    }
-
+    /*
+     * Test scratch register (R/W).
+     */
     if (test_scratch(base)) {
         printk(A2GX_ERR "MAC scratch register test failed.\n");
         goto on_err;
     }
+
+    /*
+     * Reset the MAC in case it was doing something else.
+     */
+    mac_reset(base);
+    if (mac_wait_for_reset_completion(base)) {
+        printk(A2GX_ERR "MAC stuck in reset.\n");
+        goto on_err;
+    }
+
+    /*
+     * Setup Marvell 88E1111 PHY.
+     */
+    iowrite32(0, base + A2GX_MAC_MDIO_ADDR0_REG);
+    iowrite32(0, base + A2GX_MAC_MDIO_ADDR1_REG);
+    wmb();
+    init_phy(base + A2GX_MAC_MDIO0_REG);
+
     read_rev(base, &rev);
     frm_len = ioread32(base + A2GX_MAC_FRM_LEN_REG);
     rmb();
