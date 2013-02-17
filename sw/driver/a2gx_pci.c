@@ -30,6 +30,7 @@
 #include "a2gx_pci.h"
 #include "a2gx_net.h"
 #include "a2gx_dma.h"
+#include "a2gx_mac.h"
 #include "a2gx_device.h"
 
 #define A2GX_PCI_VENDOR_ID 0x1172
@@ -102,11 +103,21 @@ static int probe(struct pci_dev *pci_dev, const struct pci_device_id *pci_id)
         goto on_err;
     }
 
+    r = a2gx_mac_init(dev);
+    /* TODO: Handle error! */
+
     r = a2gx_dma_init(dev);
     if (r) {
-        err_msg = "Cannot setup DMA";
+        err_msg = "Cannot initialize DMA";
         goto on_err;
     }
+
+    printk(A2GX_INFO
+           "Device 0x%x at bus %d dev %d func %d initialized.\n"
+           "\t[bar0=%p, bar2=%p, dma_mask=0x%x]\n",
+           pci_dev->device, pci_dev->bus->number, PCI_SLOT(pci_dev->devfn),
+           PCI_FUNC(pci_dev->devfn),
+           dev->bar0, dev->bar2, dev->dma_mask);
 
     return r;
 

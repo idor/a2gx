@@ -29,9 +29,6 @@
 
 #define A2GX_DRIVER_NAME "a2gx"
 
-/*
- * Log macros.
- */
 #define A2GX_INFO KERN_INFO A2GX_DRIVER_NAME ": "
 #define A2GX_ERR KERN_ERR A2GX_DRIVER_NAME ": "
 

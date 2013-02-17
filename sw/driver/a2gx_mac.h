@@ -24,41 +24,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "a2gx_device.h"
-#include "a2gx_dma.h"
+#ifndef A2GX_MAC_H
+#define A2GX_MAC_H
 
-int a2gx_dma_init(struct a2gx_dev *dev)
-{
-    void __iomem *mem = dev->bar2 + A2GX_DMA_BASE + A2GX_DMA_A2P_REG;
+#define A2GX_MAC_BASE 0x02004000
+#define A2GX_MAC_BASE_END 0x020043ff
+#define A2GX_MAC_BASE_LEN (A2GX_MAC_BASE_END-A2GX_MAC_BASE)
 
-    iowrite32(0xFFFFFFFC, mem);
-    wmb();
-    dev->dma_mask = ioread32(mem);
-    rmb();
-    if (!dev->dma_mask)
-        goto on_err;
-    a2gx_dma_reset(dev);
-    return 0;
-  on_err:
-    return -1;
-}
+#define A2GX_MAC_REV_REG 0x00
+#define A2GX_MAC_SCRATCH_REG 0x01
+#define A2GX_MAC_CMD_CFG_REG 0x02
+#define A2GX_MAC_FRM_LEN_REG 0x05
+#define A2GX_MAC_PAUSE_QUANT_REG 0x06
+#define A2GX_MAC_TX_IPG_REG 0x17
 
-void a2gx_dma_reset_reader(struct a2gx_dev *dev)
-{
-    u32 *base = dev->bar2 + A2GX_DMA_R_BASE;
-    iowrite32(A2GX_DMA_CSR_RESET_MASK, base + A2GX_DMA_CSR_REG);
-    wmb();
-}
+struct a2gx_dev;
 
-void a2gx_dma_reset_writer(struct a2gx_dev *dev)
-{
-    u32 *base = dev->bar2 + A2GX_DMA_W_BASE;
-    iowrite32(A2GX_DMA_CSR_RESET_MASK, (base + A2GX_DMA_CSR_REG));
-    wmb();
-}
+int a2gx_mac_init(struct a2gx_dev *dev);
 
-void a2gx_dma_reset(struct a2gx_dev *dev)
-{
-    a2gx_dma_reset_reader(dev);
-    a2gx_dma_reset_writer(dev);
-}
+#endif

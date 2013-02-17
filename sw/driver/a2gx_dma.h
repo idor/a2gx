@@ -27,8 +27,20 @@
 #ifndef A2GX_DMA_H
 #define A2GX_DMA_H
 
+#define A2GX_DMA_BASE 0x0
+#define A2GX_DMA_A2P_REG 0x1000
+
+#define A2GX_DMA_R_BASE 0x03000000
+#define A2GX_DMA_W_BASE 0x04000000
+
+#define A2GX_DMA_CSR_REG 0x0
+#define A2GX_DMA_CSR_RESET_MASK (1<<1)
+
 struct a2gx_dev;
 
 int a2gx_dma_init(struct a2gx_dev *dev);
+void a2gx_dma_reset_reader(struct a2gx_dev *dev);
+void a2gx_dma_reset_writer(struct a2gx_dev *dev);
+void a2gx_dma_reset(struct a2gx_dev *dev);
 
 #endif
