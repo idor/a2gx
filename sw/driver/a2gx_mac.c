@@ -24,6 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <linux/dmi.h>
 #include "a2gx.h"
 #include "a2gx_device.h"
 #include "a2gx_mac.h"
@@ -51,6 +52,7 @@
 #define MAC_CMD_MAGIC_ENA (1<<19)
 #define MAC_CMD_SLEEP (1<<20)
 #define MAC_CMD_WAKEUP (1<<21)
+#define MAC_CMD_CNT_RESET (1<<31)
 
 struct revision_info {
     u16 ip_core;
@@ -85,16 +87,23 @@ static int test_scratch(u32 __iomem *base)
     return -1;
 }
 
+static u32 mac_read_cfg(u32 __iomem *base)
+{
+    u32 ret;
+    ret = ioread32(base + A2GX_MAC_CMD_CFG_REG);
+    rmb();
+    return ret;
+}
+
+static void mac_write_cfg(u32 __iomem *base, u32 cfg)
+{
+    iowrite32(cfg, base + A2GX_MAC_CMD_CFG_REG);
+    wmb();
+}
+
 static void mac_reset(u32 __iomem *base)
 {
-    u32 __iomem *reg;
-    u32 cmd;
-
-    reg = base + A2GX_MAC_CMD_CFG_REG;
-    cmd = ioread32(reg);
-    rmb();
-    iowrite32(cmd | MAC_CMD_SW_RESET, reg);
-    wmb();
+    mac_write_cfg(base, mac_read_cfg(base) | MAC_CMD_SW_RESET);
 }
 
 static int mac_in_reset(u32 __iomem *base)
@@ -130,11 +139,11 @@ static void phy_sw_reset(u32 __iomem *base)
  * Initialize Marvell PHY. Since we don't have a spec for that PHY,
  * the logic is ported from Altera's "N647_TSE_Single_Port_RGMI_Dev_AIIGX_ACDS"
  * reference design for Arria II GX Board (tse_marvell_phy.tcl).
+ * The below initialization will bring the PHY's link up.
  */
 static void init_phy(u32 __iomem *base)
 {
     u32 v;
-    unsigned int i;
 
     /* Initialize Control (REG 0) */
     v = ioread32(base + A2GX_PHY_CTRL_REG);
@@ -201,6 +210,88 @@ static int phy_link_is_up(u32 __iomem *base)
     return ((status & 0x0400) == 0x00000400);
 }
 
+static u32 get_board_serial(void)
+{
+    u32 res = 0;
+    u64 id_n;
+    const char *s;
+    s = dmi_get_system_info(DMI_BOARD_SERIAL);
+    if (!s)
+        goto out;
+    if (kstrtou64(s, 10, &id_n))
+        goto out;
+    res = (u32)id_n;
+  out:
+    return res;
+}
+
+static void generate_mac(unsigned char mac_addr[6])
+{
+    u32 ser_num;
+
+    ser_num = get_board_serial();
+
+    /* This is the Altera Vendor ID */
+    mac_addr[0] = 0x0;
+    mac_addr[1] = 0x7;
+    mac_addr[2] = 0xed;
+
+    /* Reserverd Board identifier */
+    mac_addr[3] = 0xFF;
+    mac_addr[4] = (ser_num & 0xff00) >> 8;
+    mac_addr[5] = ser_num & 0xff;
+}
+
+/*
+ * Sets 6-byte MAC primary address for TSE.
+ *
+ * The first four most significant bytes of the MAC address occupy mac_0 in
+ * reverse order. The last two bytes of the MAC address occupy the two least
+ * significant bytes of mac_1 in reverse order.
+ *
+ * For example, if the MAC address is 00-1C-23-17-4A-CB, the following
+ * assignments are made:
+ *
+ *     mac_0 = 0x17231c00
+ *     mac_1 = 0x0000CB4a
+ *
+ * Ensure that you configure these registers with a valid MAC address if you
+ * disable the promiscuous mode (PROMIS_EN bit in command_config = 0).
+ */
+static void write_mac_addr(u32 __iomem *base, const unsigned char mac_addr[6])
+{
+    unsigned char str[4];
+    u32 mac_0;
+    u32 mac_1;
+
+    memcpy(&mac_0, mac_addr, sizeof(u32));
+    str[0] = mac_addr[4];
+    str[1] = mac_addr[5];
+    str[2] = 0;
+    str[4] = 0;
+    memcpy(&mac_1, str, sizeof(u32));
+
+    iowrite32(mac_0, base + A2GX_MAC_ADDR0_REG);
+    iowrite32(mac_1, base + A2GX_MAC_ADDR1_REG);
+    wmb();
+}
+
+static void init_mac(u32 __iomem *base)
+{
+    u32 cfg;
+    unsigned char mac_addr[6];
+    generate_mac(mac_addr);
+    write_mac_addr(base, mac_addr);
+    cfg = mac_read_cfg(base);
+
+    cfg |= MAC_CMD_TX_ENA;
+    cfg |= MAC_CMD_RX_ENA;
+    cfg |= MAC_CMD_ETH_SPEED; /* Gigabit Mode */
+    cfg |= MAC_CMD_PAUSE_IGNORE;
+    cfg |= MAC_CMD_CNT_RESET;
+    mac_write_cfg(base, cfg);
+}
+
 int a2gx_mac_init(struct a2gx_dev *dev)
 {
     struct revision_info rev;
@@ -233,6 +324,11 @@ int a2gx_mac_init(struct a2gx_dev *dev)
     iowrite32(0, base + A2GX_MAC_MDIO_ADDR1_REG);
     wmb();
     init_phy(base + A2GX_MAC_MDIO0_REG);
+
+    /*
+     * Finish MAC configuration and enable RX/TX.
+     */
+    init_mac(base);
 
     read_rev(base, &rev);
     frm_len = ioread32(base + A2GX_MAC_FRM_LEN_REG);
