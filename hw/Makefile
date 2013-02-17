@@ -38,14 +38,27 @@ BUILD_DIR = $(PROJECT_DIR)/build
 
 QSYS_TOP = $(PROJECT_NAME).qsys
 QSYS_QIP = $(BUILD_DIR)/$(PROJECT_NAME).qip
+QPF_FILES = $(PROJECT_NAME).qpf $(PROJECT_NAME).qsf
+
+MAP_RPT   = $(PROJECT_NAME).map.rpt
+MAP_CHG   = $(PROJECT_NAME).map.chg
+FIT_RPT   = $(PROJECT_NAME).fit.rpt
+FIT_CHG   = $(PROJECT_NAME).fit.chg
+STA_RPT   = $(PROJECT_NAME).sta.rpt
+STA_CHG   = $(PROJECT_NAME).sta.chg
 
 export RTL_FILES = $(wildcard *.v)
 export QIP_FILES = $(QSYS_QIP) $(wildcard $(PROJECT_DIR)/qip/*.qip)
+
+SOF       = $(PROJECT_NAME).sof
+STAMP     = echo done >
 
 # Quartus II Project Generation
 $(PRJ_FILE): $(SETUP_SCRIPT) $(SDC_FILE)
 	quartus_sh -t $(SETUP_SCRIPT)
 	@touch $(PRJ_FILE)
+
+$(QPF_FILES): $(PROJECT_NAME).prj
 
 # QSys System Generation
 generate_qsys: $(QSYS_QIP)
@@ -63,3 +76,47 @@ $(QSYS_QIP): $(QSYS_TOP)
 		--output-name=$(PROJECT_NAME)_qsys \
 		--report-file=qip:$(QSYS_QIP) \
 		--report-file=html:$(BUILD_DIR)/$(PROJECT_NAME)_report.html
+
+# Synthesize
+map: $(MAP_CHG)
+
+$(MAP_RPT): $(RTL_FILES) $(QIP_FILES) $(PRJ_FILE)
+	quartus_map $(PROJECT_NAME) --write_settings_files=off
+
+$(MAP_CHG): $(MAP_RPT)
+	$(STAMP) $(MAP_CHG)
+
+# Fit
+fit: $(FIT_CHG)
+
+$(FIT_RPT): $(MAP_RPT)
+	quartus_fit $(PROJECT_NAME) --write_settings_files=off
+
+$(FIT_CHG): $(FIT_RPT)
+	$(STAMP) $(FIT_CHG)
+
+# Time Quest
+sta: $(STA_CHG)
+
+$(STA_RPT): $(FIT_RPT)
+	quartus_sta $(PROJECT_NAME)
+
+$(STA_CHG): $(STA_RPT)
+	$(STAMP) $(STA_CHG)
+
+# SRAM Object File Generation
+sof: $(SOF)
+
+$(SOF): $(FIT_CHG)
+	quartus_asm $(PROJECT_NAME) --write_settings_files=off
+	test -f $(PROJECT_NAME)_time_limited.sof && \
+	mv $(PROJECT_NAME)_time_limited.sof $(SOF)
+
+program: $(SOF)
+	quartus_pgm -c "USB-Blaster" -m JTAG -o "P;$(SOF)"
+
+# Cleanup.
+clean:
+
+# Misc
+.SECONDARY: $(QPF_FILES)

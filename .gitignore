@@ -3,9 +3,14 @@ hw/build
 hw/*.prj
 hw/*.qpf
 hw/*.qsf
+hw/*.qws
 hw/*.rpt
 hw/*.smsg
 hw/*.summary
 hw/*.done
+hw/*.pin
+hw/*.jdi
+hw/*.sof
+hw/*.chg
 hw/db
 hw/incremental_db

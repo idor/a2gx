@@ -78,24 +78,49 @@ foreach f ${QIP_FILES} {
 
 # 100 MHz Clock
 set_location_assignment PIN_AJ19 -to clk_top_100_p
-set_location_assignment PIN_AK19 -to clk_top_100_n
+#set_location_assignment PIN_AK19 -to clk_top_100_n
 set_instance_assignment -name IO_STANDARD LVDS -to clk_top_100_p
 
 # 125 MHz Clock
-set_location_assignment PIN_F18 -to clkin_top_p
-set_instance_assignment -name IO_STANDARD LVDS -to clkin_top_p
+set_location_assignment PIN_F18 -to clk_top_125_p
+set_instance_assignment -name IO_STANDARD LVDS -to clk_top_125_p
 
 # Reset button (PB1, active low)
 set_location_assignment PIN_AL7 -to global_reset_n
 set_instance_assignment -name IO_STANDARD "1.8 V" -to global_reset_n
 set_instance_assignment -name IO_MAXIMUM_TOGGLE_RATE "0 MHz" -to global_reset_n
 
+# PCIe
+set_location_assignment PIN_AE29 -to pcie_refclk
+set_location_assignment PIN_N1 -to pcie_rstn
+
+set_location_assignment PIN_AN33 -to pcie_rx_in0
+set_location_assignment PIN_AL33 -to pcie_rx_in1
+set_location_assignment PIN_AJ33 -to pcie_rx_in2
+set_location_assignment PIN_AG33 -to pcie_rx_in3
+set_location_assignment PIN_AM31 -to pcie_tx_out0
+set_location_assignment PIN_AK31 -to pcie_tx_out1
+set_location_assignment PIN_AH31 -to pcie_tx_out2
+set_location_assignment PIN_AF31 -to pcie_tx_out3
+
+set_instance_assignment -name IO_STANDARD HCSL -to pcie_refclk
+set_instance_assignment -name IO_STANDARD "2.5 V" -to pcie_rstn
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_rx_in0
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_rx_in1
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_rx_in2
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_rx_in3
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_tx_out0
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_tx_out1
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_tx_out2
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to pcie_tx_out3
+
+
 # PCIe LEDs
 set_location_assignment PIN_E1 -to pcie_led[0]
 set_location_assignment PIN_R9 -to pcie_led[1]
 set_location_assignment PIN_H3 -to pcie_led[2]
 set_location_assignment PIN_D2 -to pcie_led[3]
-set_instance_assignment -name IO_STANDARD "2.5 V" -to lane_active_led
+set_instance_assignment -name IO_STANDARD "2.5 V" -to pcie_led
 
 # Ethernet RGMII
 set_location_assignment PIN_D25 -to eth_tx_clk
