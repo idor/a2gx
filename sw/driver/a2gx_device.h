@@ -34,8 +34,7 @@ struct pci_dev;
 struct net_device;
 
 struct a2gx_dev {
-    void __iomem *bar0;
-    void __iomem *bar2;
+    void __iomem *bar;
     unsigned char *ring_buf;
     dma_addr_t ring_buf_dma;
     u32 dma_mask;

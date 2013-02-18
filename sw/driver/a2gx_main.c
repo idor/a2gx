@@ -26,21 +26,133 @@
 
 #include <linux/init.h>
 #include <linux/module.h>
-#include "a2gx_pci.h"
+#include <linux/pci.h>
+#include "a2gx.h"
+#include "a2gx_device.h"
+#include "a2gx_net.h"
+#include "a2gx_dma.h"
+#include "a2gx_mac.h"
+
+#define A2GX_PCI_VENDOR_ID 0x1172
+#define A2GX_PCI_DEVICE_ID 0x1986
 
 MODULE_AUTHOR("Vlad Lazarenko");
 MODULE_VERSION("0.0.1");
 MODULE_DESCRIPTION("Arria II GX Driver");
 MODULE_LICENSE("Dual BSD/GPL");
 
+static const struct pci_device_id a2gx_pci_ids[] =
+{
+    { PCI_DEVICE(A2GX_PCI_VENDOR_ID, A2GX_PCI_DEVICE_ID) },
+    { 0 }
+};
+
+MODULE_DEVICE_TABLE(pci, a2gx_pci_ids);
+
+static int
+a2gx_pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *pci_id)
+{
+    struct a2gx_dev *dev;
+    int r;
+    const char *err_msg = "";
+
+    printk(A2GX_INFO "Device 0x%x has been found at bus %d dev %d func %d\n",
+           pci_dev->device, pci_dev->bus->number, PCI_SLOT(pci_dev->devfn),
+           PCI_FUNC(pci_dev->devfn));
+
+    dev = a2gx_net_alloc(pci_dev);
+    if (!dev) {
+        r = -ENOMEM;
+        err_msg = "Cannot allocate device";
+        goto on_err;
+    }
+    pci_set_drvdata(pci_dev, dev);
+    r = pci_enable_device(pci_dev);
+    if (r) {
+        err_msg = "Cannot enable PCI device";
+        goto on_err;
+    }
+    pci_set_master(pci_dev);
+    pci_try_set_mwi(pci_dev);
+
+    dev->bar = ioremap_nocache(pci_resource_start(pci_dev, 2),
+                                pci_resource_len(pci_dev, 2));
+    if (!dev->bar) {
+        err_msg = "Cannot map I/O bar(s).";
+        goto on_err;
+    }
+
+    r = a2gx_mac_init(dev);
+    /* TODO: Handle error! */
+
+    r = a2gx_dma_init(dev);
+    if (r) {
+        err_msg = "Cannot initialize DMA";
+        goto on_err;
+    }
+
+    r = a2gx_net_init(dev);
+    if (r) {
+        err_msg = "Cannot initialize network device";
+        goto on_err;
+    }
+
+    printk(A2GX_INFO
+           "Device 0x%x at bus %d dev %d func %d initialized.\n"
+           "\t[io_bar=%p, dma_mask=0x%x]\n",
+           pci_dev->device, pci_dev->bus->number, PCI_SLOT(pci_dev->devfn),
+           PCI_FUNC(pci_dev->devfn),
+           dev->bar, dev->dma_mask);
+
+    return r;
+
+  on_err:
+    a2gx_dma_fini(dev);
+    a2gx_net_free(dev);
+    printk(A2GX_ERR "Device probe failed (%d): %s\n", r, err_msg);
+    return r;
+}
+
+static void a2gx_pci_remove(struct pci_dev *pci_dev)
+{
+    struct a2gx_dev *dev;
+
+    dev = pci_get_drvdata(pci_dev);
+    pci_set_drvdata(pci_dev, NULL);
+    if (!dev)
+        goto pci_disable;
+    a2gx_net_fini(dev);
+    a2gx_dma_fini(dev);
+    if (dev->bar)
+        iounmap(dev->bar);
+    a2gx_net_free(dev);
+  pci_disable:
+    pci_disable_device(pci_dev);
+}
+
+static struct pci_driver a2gx_pci_drv =
+{
+    .name = A2GX_DRIVER_NAME,
+    .id_table = a2gx_pci_ids,
+    .probe = a2gx_pci_probe,
+    .remove = a2gx_pci_remove
+};
+
 static int __init a2gx_init(void)
 {
-    return a2gx_pci_register();
+    int r;
+
+    r = pci_register_driver(&a2gx_pci_drv);
+    if (r) {
+        printk(A2GX_ERR "Failed to register PCI driver (%d)\n", r);
+        return -1;
+    }
+    return r;
 }
 
 static void __exit a2gx_exit(void)
 {
-    a2gx_pci_unregister();
+    pci_unregister_driver(&a2gx_pci_drv);
 }
 
 module_init(a2gx_init);

@@ -299,7 +299,7 @@ int a2gx_mac_init(struct a2gx_dev *dev)
     u32 __iomem *base;
     u32 frm_len;
 
-    base = (dev->bar2 + A2GX_MAC_BASE);
+    base = (dev->bar + A2GX_MAC_BASE);
 
     /*
      * Test scratch register (R/W).

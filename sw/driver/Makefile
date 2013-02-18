@@ -25,7 +25,7 @@
 #
 
 obj-m := a2gx.o
-a2gx-objs := a2gx_main.o a2gx_pci.o a2gx_dma.o a2gx_mac.o a2gx_net.o
+a2gx-objs := a2gx_main.o a2gx_dma.o a2gx_mac.o a2gx_net.o
 
 KERNEL_DIR  := /lib/modules/$(shell uname -r)/build
 PWD         := $(shell pwd)

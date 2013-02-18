@@ -65,7 +65,7 @@ u32 read_status(u32 __iomem *csr_base)
 
 int a2gx_dma_init(struct a2gx_dev *dev)
 {
-    void __iomem *base = (dev->bar2 + A2GX_DMA_BASE);
+    void __iomem *base = (dev->bar + A2GX_DMA_BASE);
 
     iowrite32(0xFFFFFFFC, base + A2GX_DMA_A2P_BASE);
     wmb();
@@ -98,7 +98,7 @@ void a2gx_dma_fini(struct a2gx_dev *dev)
 
 void a2gx_dma_reset_reader(struct a2gx_dev *dev)
 {
-    u32 __iomem *base = dev->bar2 + A2GX_DMA_R_BASE;
+    u32 __iomem *base = dev->bar + A2GX_DMA_R_BASE;
     iowrite32(A2GX_DMA_CSR_CONTROL_RESET_MASK,
               (base + A2GX_DMA_CSR_CONTROL_REG));
     wmb();
@@ -106,7 +106,7 @@ void a2gx_dma_reset_reader(struct a2gx_dev *dev)
 
 void a2gx_dma_reset_writer(struct a2gx_dev *dev)
 {
-    u32 __iomem *base = dev->bar2 + A2GX_DMA_W_BASE;
+    u32 __iomem *base = dev->bar + A2GX_DMA_W_BASE;
     iowrite32(A2GX_DMA_CSR_CONTROL_RESET_MASK,
               (base + A2GX_DMA_CSR_CONTROL_REG));
     wmb();
@@ -122,7 +122,7 @@ int a2gx_dma_write(struct a2gx_dev *dev, void *addr, u32 len)
 {
     u32 ctrl;
 
-    ctrl = read_status(dev->bar2 + A2GX_DMA_W_BASE);
+    ctrl = read_status(dev->bar + A2GX_DMA_W_BASE);
     if (ctrl & A2GX_DMA_CSR_STATUS_FULL)
         return -EAGAIN;
     // TODO: Write descriptor, issue GO.
