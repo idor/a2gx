@@ -98,11 +98,12 @@ a2gx_pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *pci_id)
     }
 
     printk(A2GX_INFO
-           "Device 0x%x at bus %d dev %d func %d initialized.\n"
-           "\t[io_bar=%p, dma_mask=0x%x]\n",
+           "Device 0x%x at bus %d dev %d func %d initialized [io_bar=%p].\n",
            pci_dev->device, pci_dev->bus->number, PCI_SLOT(pci_dev->devfn),
            PCI_FUNC(pci_dev->devfn),
-           dev->bar, dev->dma_mask);
+           dev->bar);
+
+    a2gx_dma_test(dev);
 
     return r;
 

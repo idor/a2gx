@@ -30,6 +30,31 @@
 #include "a2gx_device.h"
 #include "a2gx_mac.h"
 
+#define MAC_BASE 0x02004000
+#define MAC_BASE_END 0x020043ff
+#define MAC_BASE_LEN (MAC_BASE_END-MAC_BASE)
+
+#define MAC_REV_REG 0x00
+#define MAC_SCRATCH_REG 0x01
+#define MAC_CMD_CFG_REG 0x02
+#define MAC_ADDR0_REG 0x03
+#define MAC_ADDR1_REG 0x04
+#define MAC_FRM_LEN_REG 0x05
+#define MAC_PAUSE_QUANT_REG 0x06
+#define MAC_TX_IPG_REG 0x17
+#define MAC_MDIO_ADDR0_REG 0x0F
+#define MAC_MDIO_ADDR1_REG 0x10
+#define MAC_MDIO0_REG 0x80
+#define MAC_MDIO1_REG 0xA0
+#define PHY_CTRL_REG 0x00
+#define PHY_AUTO_NEG 0x04
+#define PHY_AUTO_NEG 0x04
+#define PHY_1000BASE_T_CONTROL 0x09
+#define PHY_SPEC_CONTROL 0x10
+#define PHY_SPEC_STATUS 0x11 /* 0x2c4 */
+#define PHY_SPEC_CONTROL_EXT 0x14
+#define PHY_SPEC_STATUS_EXT 0x1B
+
 /*
  * MAC command configuration. See Table 6–2 (Register Map)
  * of Triple-Speed Ethernet User Guide for details.
@@ -70,7 +95,7 @@ static void read_rev(u32 __iomem *base, struct revision_info *dst)
 
 static int test_scratch(u32 __iomem *base)
 {
-    u32 *scratch = ((u32 *)base) + A2GX_MAC_SCRATCH_REG;
+    u32 *scratch = ((u32 *)base) + MAC_SCRATCH_REG;
     u32 i;
     u32 v;
 
@@ -91,14 +116,14 @@ static int test_scratch(u32 __iomem *base)
 static u32 mac_read_cfg(u32 __iomem *base)
 {
     u32 ret;
-    ret = ioread32(base + A2GX_MAC_CMD_CFG_REG);
+    ret = ioread32(base + MAC_CMD_CFG_REG);
     rmb();
     return ret;
 }
 
 static void mac_write_cfg(u32 __iomem *base, u32 cfg)
 {
-    iowrite32(cfg, base + A2GX_MAC_CMD_CFG_REG);
+    iowrite32(cfg, base + MAC_CMD_CFG_REG);
     wmb();
 }
 
@@ -111,7 +136,7 @@ static int mac_in_reset(u32 __iomem *base)
 {
     u32 __iomem *reg;
     u32 cmd;
-    reg = base + A2GX_MAC_CMD_CFG_REG;
+    reg = base + MAC_CMD_CFG_REG;
     cmd = ioread32(reg);
     rmb();
     return (cmd & MAC_CMD_SW_RESET);
@@ -130,9 +155,9 @@ static int mac_wait_for_reset_completion(u32 __iomem *base)
 static void phy_sw_reset(u32 __iomem *base)
 {
     u32 ctrl;
-    ctrl = ioread32(base + A2GX_PHY_CTRL_REG);
+    ctrl = ioread32(base + PHY_CTRL_REG);
     rmb();
-    iowrite32(ctrl | 0x8000, base + A2GX_PHY_CTRL_REG);
+    iowrite32(ctrl | 0x8000, base + PHY_CTRL_REG);
     wmb();
 }
 
@@ -147,69 +172,71 @@ static void init_phy(u32 __iomem *base)
     u32 v;
 
     /* Initialize Control (REG 0) */
-    v = ioread32(base + A2GX_PHY_CTRL_REG);
+    v = ioread32(base + PHY_CTRL_REG);
     rmb();
 
     v &= 0x8EBF; /* Reset */
     v |= 0x0040; /* Enable Speed 1000 */
     v |= 0x0100; /* Enable Full Duplex Mode */
-    iowrite32(v, base + A2GX_PHY_CTRL_REG);
+    iowrite32(v, base + PHY_CTRL_REG);
     wmb();
 
     phy_sw_reset(base);
 
     /* AN Advertisement Register (REG 4) */
-    v = ioread32(base + A2GX_PHY_AUTO_NEG);
+    v = ioread32(base + PHY_AUTO_NEG);
     rmb();
 
-    iowrite32(v & 0xFE1F, base + A2GX_PHY_AUTO_NEG);
+    iowrite32(v & 0xFE1F, base + PHY_AUTO_NEG);
     wmb();
     phy_sw_reset(base);
 
     /* 1000BASE-T Control Register (REG 9) */
-    v = ioread32(base + A2GX_PHY_1000BASE_T_CONTROL);
+    v = ioread32(base + PHY_1000BASE_T_CONTROL);
     rmb();
-    iowrite32(v & 0xFCFF, base + A2GX_PHY_1000BASE_T_CONTROL);
+    iowrite32(v & 0xFCFF, base + PHY_1000BASE_T_CONTROL);
     wmb();
     phy_sw_reset(base);
 
     /* PHYSpecific Control Register (REG 16).
        Set PHY Synchronizing FIFO to maximum */
-    v = ioread32(base + A2GX_PHY_SPEC_CONTROL);
+    v = ioread32(base + PHY_SPEC_CONTROL);
     rmb();
 
-    iowrite32(v | 0xC000, base + A2GX_PHY_SPEC_CONTROL);
+    iowrite32(v | 0xC000, base + PHY_SPEC_CONTROL);
     wmb();
     phy_sw_reset(base);
 
     /* Extended PHYSpecific Status Register (REG 27).
        Set PHY HWCFG_MODE for RGMII to Copper. */
-    v = ioread32(base + A2GX_PHY_SPEC_STATUS_EXT);
+    v = ioread32(base + PHY_SPEC_STATUS_EXT);
     rmb();
-    iowrite32(v | 0x000B, base + A2GX_PHY_SPEC_STATUS_EXT);
+    iowrite32(v | 0x000B, base + PHY_SPEC_STATUS_EXT);
     wmb();
     phy_sw_reset(base);
 
     /* Extended PHYSpecific Control Register (REG 20).
        Enable RGMII TX and RX Timing Control. */
-    v = ioread32(base + A2GX_PHY_SPEC_CONTROL_EXT);
+    v = ioread32(base + PHY_SPEC_CONTROL_EXT);
     rmb();
 
     v &= 0xFF7D;
     v |= 0x0082;
-    iowrite32(v, base + A2GX_PHY_SPEC_CONTROL_EXT);
+    iowrite32(v, base + PHY_SPEC_CONTROL_EXT);
     wmb();
     phy_sw_reset(base);
 }
 
+#if 0
 static int phy_link_is_up(u32 __iomem *base)
 {
     /* PHY Specific Status Register (REG 17). Wait for Link Up. */
     u32 status;
-    status = ioread32(base + A2GX_PHY_SPEC_STATUS);
+    status = ioread32(base + PHY_SPEC_STATUS);
     rmb();
     return ((status & 0x0400) == 0x00000400);
 }
+#endif
 
 static u32 get_board_serial(void)
 {
@@ -272,8 +299,8 @@ static void write_mac_addr(u32 __iomem *base, const unsigned char mac_addr[6])
     str[4] = 0;
     memcpy(&mac_1, str, sizeof(u32));
 
-    iowrite32(mac_0, base + A2GX_MAC_ADDR0_REG);
-    iowrite32(mac_1, base + A2GX_MAC_ADDR1_REG);
+    iowrite32(mac_0, base + MAC_ADDR0_REG);
+    iowrite32(mac_1, base + MAC_ADDR1_REG);
     wmb();
 }
 
@@ -284,8 +311,12 @@ static void init_mac(u32 __iomem *base, struct net_device *net_dev)
     generate_mac(mac_addr);
     write_mac_addr(base, mac_addr);
     cfg = mac_read_cfg(base);
+
+    /* Do not turn these on here! */
     cfg |= MAC_CMD_TX_ENA;
     cfg |= MAC_CMD_RX_ENA;
+    cfg |= MAC_CMD_PROMIS_EN;
+
     cfg |= MAC_CMD_ETH_SPEED; /* Gigabit Mode */
     cfg |= MAC_CMD_PAUSE_IGNORE;
     cfg |= MAC_CMD_CNT_RESET;
@@ -299,7 +330,7 @@ int a2gx_mac_init(struct a2gx_dev *dev)
     u32 __iomem *base;
     u32 frm_len;
 
-    base = (dev->bar + A2GX_MAC_BASE);
+    base = (dev->bar + MAC_BASE);
 
     /*
      * Test scratch register (R/W).
@@ -321,10 +352,10 @@ int a2gx_mac_init(struct a2gx_dev *dev)
     /*
      * Setup Marvell 88E1111 PHY.
      */
-    iowrite32(0, base + A2GX_MAC_MDIO_ADDR0_REG);
-    iowrite32(0, base + A2GX_MAC_MDIO_ADDR1_REG);
+    iowrite32(0, base + MAC_MDIO_ADDR0_REG);
+    iowrite32(0, base + MAC_MDIO_ADDR1_REG);
     wmb();
-    init_phy(base + A2GX_MAC_MDIO0_REG);
+    init_phy(base + MAC_MDIO0_REG);
 
     /*
      * Finish MAC configuration and enable RX/TX.
@@ -332,7 +363,7 @@ int a2gx_mac_init(struct a2gx_dev *dev)
     init_mac(base, dev->net_dev);
 
     read_rev(base, &rev);
-    frm_len = ioread32(base + A2GX_MAC_FRM_LEN_REG);
+    frm_len = ioread32(base + MAC_FRM_LEN_REG);
     rmb();
 
     printk(A2GX_INFO
@@ -342,4 +373,34 @@ int a2gx_mac_init(struct a2gx_dev *dev)
     return 0;
   on_err:
     return -1;
+}
+
+void a2gx_mac_stats(struct a2gx_dev *dev, struct a2gx_mac_stats *stats)
+{
+    u32 __iomem *base = (dev->bar + MAC_BASE);
+
+    stats->mac_0 = ioread32(base + 0x18);
+    stats->mac_1 = ioread32(base + 0x19);
+    stats->tx_frames = ioread32(base + 0x1A);
+    stats->rx_frames = ioread32(base + 0x1B);
+    stats->rx_frames_crc_err = ioread32(base + 0x1C);
+    stats->rx_frames_align_err = ioread32(base + 0x1D);
+    stats->tx_octets_lo = ioread32(base + 0x1E);
+    stats->rx_octets_lo = ioread32(base + 0x1F);
+    stats->tx_pause_frames = ioread32(base + 0x20);
+    stats->rx_pause_frames = ioread32(base + 0x21);
+    stats->rx_if_errors = ioread32(base + 0x22);
+    stats->tx_if_errors = ioread32(base + 0x23);
+    stats->rx_ucast_pkts = ioread32(base + 0x24);
+    stats->rx_mcast_pkts = ioread32(base + 0x25);
+    stats->rx_bcast_pkts = ioread32(base + 0x26);
+    stats->tx_ucast_pkts = ioread32(base + 0x28);
+    stats->tx_mcast_pkts = ioread32(base + 0x29);
+    stats->tx_bcast_pkts = ioread32(base + 0x2A);
+    stats->drop_events = ioread32(base + 0x2B);
+    stats->rx_octets_total_lo = ioread32(base + 0x2C);
+    stats->rx_frames_total_lo = ioread32(base + 0x2D);
+    stats->rx_undersized_pkts = ioread32(base + 0x2E);
+    stats->rx_oversized_pkts = ioread32(base + 0x2F);
+    rmb();
 }

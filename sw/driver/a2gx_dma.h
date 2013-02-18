@@ -38,4 +38,6 @@ void a2gx_dma_reset(struct a2gx_dev *dev);
 
 int a2gx_dma_write(struct a2gx_dev *dev, void *addr, u32 len);
 
+void a2gx_dma_test(struct a2gx_dev *dev);
+
 #endif

@@ -27,33 +27,35 @@
 #ifndef A2GX_MAC_H
 #define A2GX_MAC_H
 
-#define A2GX_MAC_BASE 0x02004000
-#define A2GX_MAC_BASE_END 0x020043ff
-#define A2GX_MAC_BASE_LEN (A2GX_MAC_BASE_END-A2GX_MAC_BASE)
-
-#define A2GX_MAC_REV_REG 0x00
-#define A2GX_MAC_SCRATCH_REG 0x01
-#define A2GX_MAC_CMD_CFG_REG 0x02
-#define A2GX_MAC_ADDR0_REG 0x03
-#define A2GX_MAC_ADDR1_REG 0x04
-#define A2GX_MAC_FRM_LEN_REG 0x05
-#define A2GX_MAC_PAUSE_QUANT_REG 0x06
-#define A2GX_MAC_TX_IPG_REG 0x17
-#define A2GX_MAC_MDIO_ADDR0_REG 0x0F
-#define A2GX_MAC_MDIO_ADDR1_REG 0x10
-#define A2GX_MAC_MDIO0_REG 0x80
-#define A2GX_MAC_MDIO1_REG 0xA0
-#define A2GX_PHY_CTRL_REG 0x00
-#define A2GX_PHY_AUTO_NEG 0x04
-#define A2GX_PHY_AUTO_NEG 0x04
-#define A2GX_PHY_1000BASE_T_CONTROL 0x09
-#define A2GX_PHY_SPEC_CONTROL 0x10
-#define A2GX_PHY_SPEC_STATUS 0x11 /* 0x2c4 */
-#define A2GX_PHY_SPEC_CONTROL_EXT 0x14
-#define A2GX_PHY_SPEC_STATUS_EXT 0x1B
-
 struct a2gx_dev;
 
+struct a2gx_mac_stats {
+    u32 mac_0;
+    u32 mac_1;
+    u32 tx_frames;
+    u32 rx_frames;
+    u32 rx_frames_crc_err;
+    u32 rx_frames_align_err;
+    u32 tx_octets_lo;
+    u32 rx_octets_lo;
+    u32 tx_pause_frames;
+    u32 rx_pause_frames;
+    u32 rx_if_errors;
+    u32 tx_if_errors;
+    u32 rx_ucast_pkts;
+    u32 rx_mcast_pkts;
+    u32 rx_bcast_pkts;
+    u32 tx_ucast_pkts;
+    u32 tx_mcast_pkts;
+    u32 tx_bcast_pkts;
+    u32 drop_events;
+    u32 rx_octets_total_lo;
+    u32 rx_frames_total_lo;
+    u32 rx_undersized_pkts;
+    u32 rx_oversized_pkts;
+};
+
 int a2gx_mac_init(struct a2gx_dev *dev);
+void a2gx_mac_stats(struct a2gx_dev *dev, struct a2gx_mac_stats *stats);
 
 #endif

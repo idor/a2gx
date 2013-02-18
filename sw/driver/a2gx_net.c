@@ -28,6 +28,8 @@
 #include "a2gx.h"
 #include "a2gx_device.h"
 #include "a2gx_net.h"
+#include "a2gx_dma.h"
+#include "a2gx_mac.h"
 
 struct a2gx_dev *a2gx_net_alloc(struct pci_dev *pci_dev)
 {
@@ -53,7 +55,6 @@ void a2gx_net_free(struct a2gx_dev *dev)
 
 static int net_open(struct net_device *dev)
 {
-    printk(A2GX_INFO "OPEN!!!\n");
     netif_start_queue(dev);
     netif_wake_queue(dev);
     return 0;
@@ -61,7 +62,6 @@ static int net_open(struct net_device *dev)
 
 static int net_stop(struct net_device *dev)
 {
-    printk(A2GX_INFO "STOP!!!\n");
     netif_stop_queue(dev);
     return 0;
 }
@@ -76,10 +76,29 @@ static int net_start_xmit(struct sk_buff *skb, struct net_device *dev)
 static struct net_device_stats *net_get_stats(struct net_device *net_dev)
 {
     struct a2gx_dev *dev;
+    struct a2gx_mac_stats mac_stats;
+    struct net_device_stats *net_stats;
 
-    printk(KERN_INFO "a2gx_net_get_stats is called\n");
     dev = netdev_priv(net_dev);
-    return &dev->net_stats;
+    a2gx_mac_stats(dev, &mac_stats);
+    net_stats = &dev->net_stats;
+
+    net_stats->rx_packets = mac_stats.rx_frames;
+    net_stats->tx_packets = mac_stats.tx_frames;
+    net_stats->rx_bytes = mac_stats.rx_octets_lo;
+    net_stats->tx_bytes = mac_stats.tx_octets_lo;
+    net_stats->rx_errors = (mac_stats.rx_if_errors +
+                            mac_stats.rx_frames_crc_err +
+                            mac_stats.rx_frames_align_err);
+    net_stats->tx_errors = (mac_stats.tx_if_errors);
+    net_stats->rx_length_errors = mac_stats.rx_undersized_pkts;
+    net_stats->rx_over_errors = mac_stats.rx_oversized_pkts;
+    net_stats->rx_crc_errors = mac_stats.rx_frames_crc_err;
+    net_stats->rx_frame_errors = mac_stats.rx_frames_align_err;
+    net_stats->rx_fifo_errors = mac_stats.drop_events / 2;
+    net_stats->tx_fifo_errors = mac_stats.drop_events / 2;
+
+    return net_stats;
 }
 
 static const struct net_device_ops net_ops =
