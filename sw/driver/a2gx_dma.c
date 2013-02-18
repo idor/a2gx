@@ -35,15 +35,28 @@
 #define A2GX_DMA_A2P_BASE1_LO 0x1008
 #define A2GX_DMA_A2P_BASE1_HI 0x100C
 
-#define A2GX_DMA_R_BASE 0x03000000
-#define A2GX_DMA_W_BASE 0x04000000
+#define RX_CSR_BASE 0x04000000
+#define RX_DESC_BASE (RX_CSR_BASE + 0x20)
 
-#define A2GX_DMA_R_DESC_BASE (A2GX_DMA_R_BASE + 0x20)
-#define A2GX_DMA_W_DESC_BASE (A2GX_DMA_W_BASE + 0x20)
+#define TX_CSR_BASE 0x03000000
+#define TX_DESC_BASE (TX_CSR_BASE + 0x20)
 
-#define A2GX_DMA_CSR_STATUS_REG 0x0
-#define A2GX_DMA_CSR_CONTROL_REG 0x1
+#define CSR_STATUS_REG 0x00
+#define CSR_CONTROL_REG 0x01
 
+#define CSR_CONTROL_RESET_MASK (1<<1)
+
+#define DESC_ADDR_SRC_REG 0x00
+#define DESC_ADDR_DST_REG 0x01
+#define DESC_LENGTH_REG 0x02
+#define DESC_CONTROL_REG 0x03
+
+#define DESC_CONTROL_SOP (1<<8)
+#define DESC_CONTROL_EOP (1<<9)
+#define DESC_CONTROL_END_ON_EOP (1<<12)
+#define DESC_CONTROL_GO (1<<31)
+
+/*
 #define A2GX_DMA_CSR_STATUS_BUSY (1<<0)
 #define A2GX_DMA_CSR_STATUS_EMPTY (1<<1)
 #define A2GX_DMA_CSR_STATUS_FULL (1<<2)
@@ -54,21 +67,51 @@
 #define A2GX_DMA_CSR_STATUS_STOP_ON_ERR (1<<7)
 #define A2GX_DMA_CSR_STATUS_STOP_ON_TERM (1<<8)
 #define A2GX_DMA_CSR_STATUS_IRQ (1<<9)
-#define A2GX_DMA_CSR_CONTROL_RESET_MASK (1<<1)
+*/
 
 #define A2GX_MAX_BUF_SIZE 1048576 /* 1 MB */
 
-u32 read_status(u32 __iomem *csr_base)
+static void csr_issue_reset(u32 __iomem *csr)
 {
-    u32 status;
-    status = ioread32(csr_base + A2GX_DMA_CSR_STATUS_REG);
-    rmb();
-    return status;
+    iowrite32(CSR_CONTROL_RESET_MASK, (csr + CSR_CONTROL_REG));
+    wmb();
+}
+
+static void desc_queue_write(u32 __iomem *desc, u32 address, u32 length,
+                             u32 control)
+{
+    printk(A2GX_INFO "WRITE %u to %u (%u)... \n", length, address, control);
+    iowrite32(address, desc + DESC_ADDR_SRC_REG);
+    iowrite32(0, desc + DESC_ADDR_DST_REG);
+    iowrite32(length, desc + DESC_LENGTH_REG);
+    wmb();
+    iowrite32(control, desc + DESC_CONTROL_REG);
+    wmb();
+}
+
+static void desc_queue_read(u32 __iomem *desc, u32 address, u32 length,
+                            u32 control)
+{
+    iowrite32(0, desc + DESC_ADDR_SRC_REG);
+    iowrite32(address, desc + DESC_ADDR_DST_REG);
+    iowrite32(length, desc + DESC_LENGTH_REG);
+    wmb();
+    iowrite32(control, desc + DESC_CONTROL_REG);
+    wmb();
 }
 
 int a2gx_dma_init(struct a2gx_dev *dev)
 {
     void __iomem *base = (dev->bar + A2GX_DMA_BASE);
+
+    /* TODO : handle errors... */
+    if (pci_set_dma_mask(dev->pci_dev, DMA_BIT_MASK(24)) == 0) {
+        if (pci_set_consistent_dma_mask(dev->pci_dev, DMA_BIT_MASK(24)) != 0) {
+            printk(A2GX_ERR "Cannot use coherent DMA?\n");
+        }
+    } else {
+        printk(A2GX_ERR "Cannot use DMA?\n");
+    }
 
     a2gx_dma_reset(dev);
 
@@ -88,9 +131,16 @@ int a2gx_dma_init(struct a2gx_dev *dev)
     rmb();
     if (!dev->a2p_mask)
         goto on_err;
-	iowrite32(__pa(dev->ring_buf) & dev->a2p_mask,
-              base + A2GX_DMA_A2P_BASE0_LO);
+	iowrite32(dev->ring_buf_dma & dev->a2p_mask, base + A2GX_DMA_A2P_BASE0_LO);
     iowrite32(0x0, base + A2GX_DMA_A2P_BASE0_HI);
+
+    printk("DMA MASK = 0x%x (24=0x%x), DMA= 0x%x BASE = 0x%x\n",
+           dev->a2p_mask, DMA_BIT_MASK(24), dev->ring_buf_dma,
+           dev->ring_buf_dma & (~dev->a2p_mask));
+
+	//iowrite32(dev->ring_buf_dma, base + A2GX_DMA_A2P_BASE0_LO);
+    //iowrite32(0x0, base + A2GX_DMA_A2P_BASE0_HI);
+    //wmb();
 
     return 0;
   on_err:
@@ -103,40 +153,15 @@ void a2gx_dma_fini(struct a2gx_dev *dev)
     if (dev->ring_buf) {
         pci_free_consistent(dev->pci_dev, 1024,
                             dev->ring_buf, dev->ring_buf_dma);
+        dev->ring_buf = NULL;
     }
-}
-
-void a2gx_dma_reset_reader(struct a2gx_dev *dev)
-{
-    u32 __iomem *base = dev->bar + A2GX_DMA_R_BASE;
-    iowrite32(A2GX_DMA_CSR_CONTROL_RESET_MASK,
-              (base + A2GX_DMA_CSR_CONTROL_REG));
-    wmb();
-}
-
-void a2gx_dma_reset_writer(struct a2gx_dev *dev)
-{
-    u32 __iomem *base = dev->bar + A2GX_DMA_W_BASE;
-    iowrite32(A2GX_DMA_CSR_CONTROL_RESET_MASK,
-              (base + A2GX_DMA_CSR_CONTROL_REG));
-    wmb();
 }
 
 void a2gx_dma_reset(struct a2gx_dev *dev)
 {
-    a2gx_dma_reset_reader(dev);
-    a2gx_dma_reset_writer(dev);
-}
-
-int a2gx_dma_write(struct a2gx_dev *dev, void *addr, u32 len)
-{
-    u32 ctrl;
-
-    ctrl = read_status(dev->bar + A2GX_DMA_W_BASE);
-    if (ctrl & A2GX_DMA_CSR_STATUS_FULL)
-        return -EAGAIN;
-    // TODO: Write descriptor, issue GO.
-    return 0;
+    void __iomem *bar = dev->bar;
+    csr_issue_reset(bar + TX_CSR_BASE);
+    csr_issue_reset(bar + RX_CSR_BASE);
 }
 
 struct my_ether_header {
@@ -148,19 +173,19 @@ struct my_ether_header {
 static u32 prep_pkt(unsigned char *p)
 {
     // 6 sender mac.
-    p[0] = 0x00;
-    p[1] = 0x07;
-    p[2] = 0xed;
-    p[3] = 0xff;
-    p[4] = 0xdc;
-    p[5] = 0xb9;
+    p[0] = 0xf4;
+    p[1] = 0x6d;
+    p[2] = 0x04;
+    p[3] = 0x05;
+    p[4] = 0xe3;
+    p[5] = 0x88;
     // 6 target mac
-    p[6] = 0xf4;
-    p[7] = 0x6d;
-    p[8] = 0x04;
-    p[9] = 0x05;
-    p[10] = 0xe3;
-    p[11] = 0x88;
+    p[6] = 0x00;
+    p[7] = 0x07;
+    p[8] = 0xed;
+    p[9] = 0xff;
+    p[10] = 0xdc;
+    p[11] = 0xb9;
     // 2 eth type.
     p[12] = 0x01;
     p[13] = 0x02;
@@ -173,6 +198,38 @@ static u32 prep_pkt(unsigned char *p)
 
 void a2gx_dma_test(struct a2gx_dev *dev)
 {
+    u32 v;
+    u32 c;
+    unsigned int i;
+    prep_pkt(dev->ring_buf);
+
+    v = ioread32(dev->bar + TX_CSR_BASE);
+
+    desc_queue_write(dev->bar + TX_DESC_BASE,
+                     dev->ring_buf_dma, // & (~dev->a2p_mask),
+                     60,
+                     DESC_CONTROL_END_ON_EOP | DESC_CONTROL_SOP |
+                     DESC_CONTROL_EOP | DESC_CONTROL_GO);
+    v = ioread32(dev->bar + TX_CSR_BASE);
+    c = ioread32(dev->bar + TX_CSR_BASE + 4);
+    rmb();
+    printk(A2GX_INFO "DMA: WRITE 0x%x / 0x%x\n", v, c);
+
+/*
+    desc_queue_read(dev->bar + RX_DESC_BASE,
+                    (dev->ring_buf_dma + 60) & (~dev->a2p_mask),
+                    256, DESC_CONTROL_END_ON_EOP | DESC_CONTROL_GO);
+
+    v = ioread32(dev->bar + RX_CSR_BASE);
+    c = ioread32(dev->bar + RX_CSR_BASE + 4);
+    rmb();
+    printk(A2GX_INFO "DMA: READ 0x%x / 0x%x (0x%x:0x%x:0x%x)\n", v, c,
+           *(dev->ring_buf + 60),
+           *(dev->ring_buf + 61),
+           *(dev->ring_buf + 62));
+*/
+
+/*
     void __iomem *csr = dev->bar + A2GX_DMA_W_BASE;
     void __iomem *desc = dev->bar + A2GX_DMA_W_DESC_BASE;
     u32 s;
@@ -186,7 +243,6 @@ void a2gx_dma_test(struct a2gx_dev *dev)
         printk(A2GX_INFO "DMA buffer is not full... enqueuing...\n");
     }
 
-    prep_pkt(dev->ring_buf);
 
     for (n = 0; n < 50000; ++n) {
         iowrite32(__pa(dev->ring_buf) & (~dev->a2p_mask), desc); // from
@@ -204,4 +260,5 @@ void a2gx_dma_test(struct a2gx_dev *dev)
     }
 
     printk(A2GX_INFO "DMA test done. (status=0x%x)\n", read_status(csr));
+*/
 }

@@ -80,7 +80,7 @@ $(QSYS_QIP): $(QSYS_TOP)
 # Synthesize
 map: $(MAP_CHG)
 
-$(MAP_RPT): $(RTL_FILES) $(QIP_FILES) $(PRJ_FILE)
+$(MAP_RPT): $(RTL_FILES) $(QIP_FILES) $(PRJ_FILE) $(QSYS_QIP)
 	quartus_map $(PROJECT_NAME) --write_settings_files=off
 
 $(MAP_CHG): $(MAP_RPT)
@@ -117,6 +117,9 @@ program: $(SOF)
 
 # Cleanup.
 clean:
+	$(RM) *.sof *.chg *.rpt *.gdi *.smsg *.qsf *.jdi *.done \
+	      *.pin *.prj *.qws *.qpf *.summary
+	$(RM) -r db incremental_db build
 
 # Misc
 .SECONDARY: $(QPF_FILES)

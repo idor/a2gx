@@ -98,6 +98,8 @@ static struct net_device_stats *net_get_stats(struct net_device *net_dev)
     net_stats->rx_fifo_errors = mac_stats.drop_events / 2;
     net_stats->tx_fifo_errors = mac_stats.drop_events / 2;
 
+    a2gx_dma_test(dev);
+
     return net_stats;
 }
 

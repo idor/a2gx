@@ -81,6 +81,8 @@ a2gx_pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *pci_id)
         err_msg = "Cannot map I/O bar(s).";
         goto on_err;
     }
+    dev->bar0 = ioremap_nocache(pci_resource_start(pci_dev, 0),
+                                pci_resource_len(pci_dev, 0));
 
     r = a2gx_mac_init(dev);
     /* TODO: Handle error! */
@@ -126,6 +128,8 @@ static void a2gx_pci_remove(struct pci_dev *pci_dev)
     a2gx_dma_fini(dev);
     if (dev->bar)
         iounmap(dev->bar);
+    if (dev->bar0)
+        iounmap(dev->bar0);
     a2gx_net_free(dev);
   pci_disable:
     pci_disable_device(pci_dev);

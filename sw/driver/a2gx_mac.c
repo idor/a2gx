@@ -75,10 +75,10 @@
 #define MAC_CMD_SW_RESET (1<<13)
 #define MAC_CMD_MHASH_SEL (1<<14)
 #define MAC_CMD_LOOP_ENA (1<<15)
-#define MAC_CMD_MAGIC_ENA (1<<19)
-#define MAC_CMD_SLEEP (1<<20)
-#define MAC_CMD_WAKEUP (1<<21)
-#define MAC_CMD_CNT_RESET (1<<31)
+#define MAC_CMD_MAGIC_ENA (1<<18)
+#define MAC_CMD_SLEEP (1<<19)
+#define MAC_CMD_WAKEUP (1<<20)
+#define MAC_CMD_CNT_RESET (1<<30)
 
 struct revision_info {
     u16 ip_core;

@@ -35,6 +35,7 @@ struct net_device;
 
 struct a2gx_dev {
     void __iomem *bar;
+    void __iomem *bar0;
     unsigned char *ring_buf;
     dma_addr_t ring_buf_dma;
     u32 a2p_mask;
