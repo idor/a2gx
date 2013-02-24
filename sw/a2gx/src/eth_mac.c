@@ -31,8 +31,6 @@
 #include <a2gx/device.h>
 #include <a2gx/eth_mac.h>
 
-#define MAC_BASE 0x02004000
-
 #define MAC_REV_REG 0x00
 #define MAC_SCRATCH_REG 0x01
 #define MAC_CMD_CFG_REG 0x02
@@ -58,26 +56,28 @@
  * MAC command configuration. See Table 6–2 (Register Map)
  * of Triple-Speed Ethernet User Guide for details.
  */
-#define MAC_CMD_TX_ENA (1<<0)
-#define MAC_CMD_RX_ENA (1<<1)
-#define MAC_CMD_XON_GEN (1<<2)
-#define MAC_CMD_ETH_SPEED (1<<3)
-#define MAC_CMD_PROMIS_EN (1<<4)
-#define MAC_CMD_PAD_EN (1<<5)
-#define MAC_CMD_CRC_FWD (1<<6)
-#define MAC_CMD_PAUSE_FWD (1<<7)
-#define MAC_CMD_PAUSE_IGNORE (1<<8)
-#define MAC_CMD_TX_ADDR_INS (1<<9)
-#define MAC_CMD_HD_ENA (1<<10)
-#define MAC_CMD_EXCESS_COL (1<<11)
-#define MAC_CMD_LATE_COL (1<<12)
-#define MAC_CMD_SW_RESET (1<<13)
-#define MAC_CMD_MHASH_SEL (1<<14)
-#define MAC_CMD_LOOP_ENA (1<<15)
-#define MAC_CMD_MAGIC_ENA (1<<18)
-#define MAC_CMD_SLEEP (1<<19)
-#define MAC_CMD_WAKEUP (1<<20)
-#define MAC_CMD_CNT_RESET (1<<30)
+#define MAC_CMD_TX_ENA       (1u<<0)
+#define MAC_CMD_RX_ENA       (1u<<1)
+#define MAC_CMD_XON_GEN      (1u<<2)
+#define MAC_CMD_ETH_SPEED    (1u<<3)
+#define MAC_CMD_PROMIS_EN    (1u<<4)
+#define MAC_CMD_PAD_EN       (1u<<5) /* Enables RX frames padding removal */
+#define MAC_CMD_CRC_FWD      (1u<<6) /* Enables forwarding of RX frames CRC */
+#define MAC_CMD_PAUSE_FWD    (1u<<7)
+#define MAC_CMD_PAUSE_IGNORE (1u<<8)
+#define MAC_CMD_TX_ADDR_INS  (1u<<9)
+#define MAC_CMD_HD_ENA       (1u<<10)
+#define MAC_CMD_EXCESS_COL   (1u<<11)
+#define MAC_CMD_LATE_COL     (1u<<12)
+#define MAC_CMD_SW_RESET     (1u<<13)
+#define MAC_CMD_MHASH_SEL    (1u<<14)
+#define MAC_CMD_LOOP_ENA     (1u<<15)
+#define MAC_CMD_MAGIC_ENA    (1u<<18)
+#define MAC_CMD_SLEEP        (1u<<19)
+#define MAC_CMD_WAKEUP       (1u<<20)
+#define MAC_CMD_NO_LEN_CHECK (1u<<24)
+#define MAC_CMD_RX_ERR_DISC  (1u<<26)
+#define MAC_CMD_CNT_RESET    (1u<<31)
 
 /*
  * Tests TSE MAC's scratch register to make sure that I/O
@@ -279,23 +279,69 @@ static int mac_wait_for_reset_completion(uint32_t *mac)
     return mac_in_reset(mac) ? -1 : 0;
 }
 
-int a2gx_eth_mac_reset(struct a2gx_device *dev)
+void a2gx_eth_mac_init(struct a2gx_eth_mac *mac)
+{
+    mac->base = NULL;
+}
+
+uint32_t a2gx_eth_mac_mtu_get(struct a2gx_eth_mac *mac)
+{
+    uint32_t ret;
+
+    ret = mac->base[MAC_FRM_LEN_REG];
+    a2gx_rmb();
+    return ret;
+}
+
+int a2gx_eth_mac_flow_enable(struct a2gx_eth_mac *mac, int promis)
+{
+    uint32_t *base;
+    uint32_t cmd;
+
+    base = mac->base;
+    cmd = mac_cmd_read(base);
+
+    cmd |= MAC_CMD_TX_ENA;
+    cmd |= MAC_CMD_RX_ENA;
+    if (promis) {
+        cmd |= MAC_CMD_PROMIS_EN;
+    } else {
+        cmd &= ~MAC_CMD_PROMIS_EN;
+    }
+
+    mac_cmd_write(base, cmd);
+    return mac_wait_for_reset_completion(base);
+}
+
+int a2gx_eth_mac_flow_disable(struct a2gx_eth_mac *mac)
+{
+    uint32_t *base;
+    uint32_t cmd;
+
+    base = mac->base;
+    cmd = mac_cmd_read(base);
+
+    cmd &= ~MAC_CMD_TX_ENA;
+    cmd &= ~MAC_CMD_RX_ENA;
+    cmd &= ~MAC_CMD_PROMIS_EN;
+
+    mac_cmd_write(base, cmd);
+    return mac_wait_for_reset_completion(base);
+}
+
+int a2gx_eth_mac_reset(struct a2gx_eth_mac *mac)
 {
     int r;
     uint32_t *base;
     uint32_t cmd;
-    struct a2gx_eth_mac_stats stats; /* todo: remove me */
 
-    base = a2gx_io_base(dev->reg.mem, MAC_BASE);
+    base = mac->base;
 
     r = test_scratch_reg(base);
     if (r) {
-        printf("scratch test failed\n");
         goto on_err;
     }
 
-    mac_reset(base);
-    printf("BEFORE WE BEGIN = 0x%x\n", mac_cmd_read(base));
     mac_reset(base);
 
     /*
@@ -313,66 +359,56 @@ int a2gx_eth_mac_reset(struct a2gx_device *dev)
     set_random_mac_address(base);
     mac_reset(base);
     if (mac_wait_for_reset_completion(base)) {
-        printf("STUCK = 0x%x\n", mac_cmd_read(base));
         goto on_err;
     }
 
     cmd = mac_cmd_read(base);
 
-    /* TODO: Do not turn these on here RX/TX ENA here! */
-    cmd |= MAC_CMD_TX_ENA;
-    cmd |= MAC_CMD_RX_ENA;
-    cmd |= MAC_CMD_PROMIS_EN;
-
-    cmd |= MAC_CMD_ETH_SPEED; /* Gigabit Mode */
+    cmd |= MAC_CMD_ETH_SPEED;
     cmd |= MAC_CMD_PAUSE_IGNORE;
     cmd |= MAC_CMD_CNT_RESET;
+    cmd |= MAC_CMD_PAD_EN;
+    cmd |= MAC_CMD_MHASH_SEL; /* Use faster hash from lower 24 bits of the
+                                 destination MAC address */
+    cmd |= MAC_CMD_NO_LEN_CHECK; /* Do not verify actual frame length */
+    cmd |= MAC_CMD_RX_ERR_DISC; /* Discard erroneous frames. */
+
+    //cmd |= MAC_CMD_LOOP_ENA; /* TODO: This is here just for testing. */
 
     mac_cmd_write(base, cmd);
-
-    a2gx_eth_mac_stats_read(&stats, dev);
-    printf("stats: tx=%u, rx=%u, crc_err=%u, rx_if_err=%u, tx_if_err=%u\n",
-           stats.tx_frames,
-           stats.rx_frames,
-           stats.rx_frames_crc_err,
-           stats.rx_if_errors,
-           stats.tx_if_errors);
-
-    printf("AFTER ALL = 0x%x\n", mac_cmd_read(base));
-
     return 0;
 
   on_err:
     return -1;
 }
 
-void a2gx_eth_mac_stats_read(struct a2gx_eth_mac_stats *dst,
-                             struct a2gx_device *dev)
+void a2gx_eth_mac_stats_read(struct a2gx_eth_mac *mac,
+                             struct a2gx_eth_mac_stats *dst)
 {
-    uint32_t *mac = a2gx_io_base(dev->reg.mem, MAC_BASE);
+    uint32_t *base = mac->base;
 
-    dst->mac_0               = mac[0x18];
-    dst->mac_1               = mac[0x19];
-    dst->tx_frames           = mac[0x1A];
-    dst->rx_frames           = mac[0x1B];
-    dst->rx_frames_crc_err   = mac[0x1C];
-    dst->rx_frames_align_err = mac[0x1D];
-    dst->tx_octets_lo        = mac[0x1E];
-    dst->rx_octets_lo        = mac[0x1F];
-    dst->tx_pause_frames     = mac[0x20];
-    dst->rx_pause_frames     = mac[0x21];
-    dst->rx_if_errors        = mac[0x22];
-    dst->tx_if_errors        = mac[0x23];
-    dst->rx_ucast_pkts       = mac[0x24];
-    dst->rx_mcast_pkts       = mac[0x25];
-    dst->rx_bcast_pkts       = mac[0x26];
-    dst->tx_ucast_pkts       = mac[0x28];
-    dst->tx_mcast_pkts       = mac[0x29];
-    dst->tx_bcast_pkts       = mac[0x2A];
-    dst->drop_events         = mac[0x2B];
-    dst->rx_octets_total_lo  = mac[0x2C];
-    dst->rx_frames_total_lo  = mac[0x2D];
-    dst->rx_undersized_pkts  = mac[0x2E];
-    dst->rx_oversized_pkts   = mac[0x2F];
+    dst->mac_0               = base[0x18];
+    dst->mac_1               = base[0x19];
+    dst->tx_frames           = base[0x1A];
+    dst->rx_frames           = base[0x1B];
+    dst->rx_frames_crc_err   = base[0x1C];
+    dst->rx_frames_align_err = base[0x1D];
+    dst->tx_octets_lo        = base[0x1E];
+    dst->rx_octets_lo        = base[0x1F];
+    dst->tx_pause_frames     = base[0x20];
+    dst->rx_pause_frames     = base[0x21];
+    dst->rx_if_errors        = base[0x22];
+    dst->tx_if_errors        = base[0x23];
+    dst->rx_ucast_pkts       = base[0x24];
+    dst->rx_mcast_pkts       = base[0x25];
+    dst->rx_bcast_pkts       = base[0x26];
+    dst->tx_ucast_pkts       = base[0x28];
+    dst->tx_mcast_pkts       = base[0x29];
+    dst->tx_bcast_pkts       = base[0x2A];
+    dst->drop_events         = base[0x2B];
+    dst->rx_octets_total_lo  = base[0x2C];
+    dst->rx_frames_total_lo  = base[0x2D];
+    dst->rx_undersized_pkts  = base[0x2E];
+    dst->rx_oversized_pkts   = base[0x2F];
     a2gx_rmb();
 }

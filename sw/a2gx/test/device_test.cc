@@ -35,8 +35,5 @@ TEST(device, open_reset_close)
     a2gx_dev_init(&dev);
     EXPECT_EQ(0, a2gx_dev_open(&dev, 0));
     EXPECT_EQ(0, a2gx_dev_reset(&dev));
-
-    a2gx_dev_rx(&dev); // WOHOO!
-
     a2gx_dev_close(&dev);
 }

@@ -32,12 +32,15 @@ extern "C" {
 #endif
 
 #include "a2gx/io.h"
+#include "a2gx/eth_mac.h"
+#include "a2gx/ring.h"
 
 struct a2gx_device {
-    struct a2gx_io reg;
+    struct a2gx_io_bar reg;
+    struct a2gx_eth_mac mac;
+    struct a2gx_rx rx;
+    struct a2gx_tx tx;
     int reg_fd;
-    void *rx_buf;
-    unsigned long rx_buf_dma;
 };
 
 void a2gx_dev_init(struct a2gx_device *dev);
@@ -47,8 +50,6 @@ int a2gx_dev_open(struct a2gx_device *dev, unsigned int number);
 int a2gx_dev_reset(struct a2gx_device *dev);
 
 void a2gx_dev_close(struct a2gx_device *dev);
-
-size_t a2gx_dev_rx(struct a2gx_device *dev);
 
 #ifdef __cplusplus
 }

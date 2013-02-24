@@ -33,9 +33,12 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdint.h>
-#include "a2gx/barrier.h"
 
-struct a2gx_io {
+#define a2gx_mb() asm volatile ("": : :"memory")
+#define a2gx_rmb() a2gx_mb()
+#define a2gx_wmb() a2gx_mb()
+
+struct a2gx_io_bar {
     void *mem;
     size_t len;
 };

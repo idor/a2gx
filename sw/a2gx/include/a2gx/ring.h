@@ -24,61 +24,58 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef A2GX_ETH_PHY_H
-#define A2GX_ETH_PHY_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef A2GX_RING_H
+#define A2GX_RING_H
 
 #include <stdint.h>
 
 struct a2gx_device;
 
-struct a2gx_eth_mac {
-    uint32_t *base;
+struct a2gx_ring {
+    unsigned char *base; /* DMA buffer base virtual address. */
+    size_t size;         /* Total size of DMA buffer in bytes. */
+    unsigned long dma;   /* DMA buffer base BUS address. */
+    unsigned int a2p;    /* Address translation mask. */
 };
 
-struct a2gx_eth_mac_stats {
-    uint32_t mac_0;
-    uint32_t mac_1;
-    uint32_t tx_frames;
-    uint32_t rx_frames;
-    uint32_t rx_frames_crc_err;
-    uint32_t rx_frames_align_err;
-    uint32_t tx_octets_lo;
-    uint32_t rx_octets_lo;
-    uint32_t tx_pause_frames;
-    uint32_t rx_pause_frames;
-    uint32_t rx_if_errors;
-    uint32_t tx_if_errors;
-    uint32_t rx_ucast_pkts;
-    uint32_t rx_mcast_pkts;
-    uint32_t rx_bcast_pkts;
-    uint32_t tx_ucast_pkts;
-    uint32_t tx_mcast_pkts;
-    uint32_t tx_bcast_pkts;
-    uint32_t drop_events;
-    uint32_t rx_octets_total_lo;
-    uint32_t rx_frames_total_lo;
-    uint32_t rx_undersized_pkts;
-    uint32_t rx_oversized_pkts;
+struct a2gx_rx {
+    void *base;                   /* DMA controller base address. */
+    unsigned int next_to_dev;
+    unsigned int next_from_dev;
+    struct a2gx_ring ring;        /* I/O buffer ring. */
 };
 
-void a2gx_eth_mac_init(struct a2gx_eth_mac *mac);
+struct a2gx_tx {
+    void *base;
+    unsigned int next_to_dev;
+    struct a2gx_ring ring;        /* I/O buffer ring. */
+};
 
-int a2gx_eth_mac_reset(struct a2gx_eth_mac *mac);
+void a2gx_ring_init(struct a2gx_ring *ring);
 
-uint32_t a2gx_eth_mac_mtu_get(struct a2gx_eth_mac *mac);
+int a2gx_ring_alloc(struct a2gx_device *dev, struct a2gx_ring *ring,
+                    unsigned int count);
 
-int a2gx_eth_mac_flow_enable(struct a2gx_eth_mac *mac, int promis);
-int a2gx_eth_mac_flow_disable(struct a2gx_eth_mac *mac);
+void a2gx_ring_free(struct a2gx_device *dev, struct a2gx_ring *ring);
 
-void a2gx_eth_mac_stats_read(struct a2gx_eth_mac *mac,
-                             struct a2gx_eth_mac_stats *dst);
+void a2gx_rx_init(struct a2gx_rx *rx);
 
-#ifdef __cplusplus
-}
-#endif
+void a2gx_rx_setup(struct a2gx_device *dev, struct a2gx_rx *rx);
+
+int a2gx_rx_reset(struct a2gx_rx *rx);
+
+int a2gx_rx_request(struct a2gx_rx *rx);
+
+int a2gx_rx_read(struct a2gx_rx *rx, unsigned char **buf, unsigned int *bytes);
+
+void a2gx_tx_init(struct a2gx_tx *tx);
+
+void a2gx_tx_setup(struct a2gx_device *dev, struct a2gx_tx *tx);
+
+int a2gx_tx_reset(struct a2gx_tx *tx);
+
+int a2gx_tx_request(struct a2gx_tx *tx, unsigned char **buf, uint32_t bytes);
+
+int a2gx_tx_write(struct a2gx_tx *tx, unsigned char *buf, uint32_t bytes);
 
 #endif
