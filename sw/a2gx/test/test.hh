@@ -24,12 +24,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef A2GX_H
-#define A2GX_H
+#ifndef A2GX_TEST_HH
+#define A2GX_TEST_HH
 
-#define A2GX_DRIVER_NAME "a2gx"
-
-#define A2GX_INFO KERN_INFO A2GX_DRIVER_NAME ": "
-#define A2GX_ERR KERN_ERR A2GX_DRIVER_NAME ": "
+#include <gtest/gtest.h>
 
 #endif

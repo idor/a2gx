@@ -24,16 +24,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-obj-m := a2gx.o
+file(GLOB TEST_HEADER_FILES "*.hh")
+file(GLOB TEST_SOURCE_FILES "*_test.cc")
+file(GLOB TEST_CONFIGS "configs/*.ini" "configs/*.cfg")
 
-KERNEL_DIR  := /lib/modules/$(shell uname -r)/build
-PWD         := $(shell pwd)
-MAKE_CMD    := $(MAKE) -C $(KERNEL_DIR) M=$(PWD)
-
-default:
-	$(MAKE_CMD) modules
-
-clean:
-	$(MAKE_CMD) clean
-
-.PHONY: default clean
+foreach(TEST_FILE ${TEST_SOURCE_FILES})
+  get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
+  add_executable(${TEST_NAME} ${TEST_HEADER_FILES} ${TEST_FILE} ${TEST_CONFIGS})
+  target_link_libraries(${TEST_NAME} ${PROJECT_NAME})
+  target_link_libraries(${TEST_NAME} gtest gtest_main pthread)
+endforeach()

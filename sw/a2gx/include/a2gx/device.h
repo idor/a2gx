@@ -24,15 +24,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef A2GX_NET_H
-#define A2GX_NET_H
+#ifndef A2GX_DEVICE_H
+#define A2GX_DEVICE_H
 
-struct a2gx_dev;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-struct a2gx_dev *a2gx_net_alloc(struct pci_dev *dev);
-void a2gx_net_free(struct a2gx_dev *dev);
+#include "a2gx/io.h"
 
-int a2gx_net_init(struct a2gx_dev *dev);
-void a2gx_net_fini(struct a2gx_dev *dev);
+struct a2gx_device {
+    struct a2gx_io reg;
+    int reg_fd;
+    void *rx_buf;
+    unsigned long rx_buf_dma;
+};
+
+void a2gx_dev_init(struct a2gx_device *dev);
+
+int a2gx_dev_open(struct a2gx_device *dev, unsigned int number);
+
+int a2gx_dev_reset(struct a2gx_device *dev);
+
+void a2gx_dev_close(struct a2gx_device *dev);
+
+size_t a2gx_dev_rx(struct a2gx_device *dev);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

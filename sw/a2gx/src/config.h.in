@@ -24,24 +24,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef A2GX_DEVICE_H
-#define A2GX_DEVICE_H
+#ifndef A2GX_CONFIG_H
+#define A2GX_CONFIG_H
 
-#include <linux/io.h>
-#include <linux/netdevice.h>
-
-struct pci_dev;
-struct net_device;
-
-struct a2gx_dev {
-    void __iomem *bar;
-    void __iomem *bar0;
-    unsigned char *ring_buf;
-    dma_addr_t ring_buf_dma;
-    u32 a2p_mask;
-    struct pci_dev *pci_dev;
-    struct net_device *net_dev;
-    struct net_device_stats net_stats;
-};
+#define A2GX_VERSION_MAJOR @A2GX_VERSION_MAJOR@
+#define A2GX_VERSION_MINOR @A2GX_VERSION_MINOR@
+#define A2GX_VERSION_PATCH @A2GX_VERSION_PATCH@
 
 #endif

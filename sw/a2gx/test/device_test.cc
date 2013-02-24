@@ -24,38 +24,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef A2GX_MAC_H
-#define A2GX_MAC_H
+#include <cstring>
+#include <a2gx/device.h>
+#include "test.hh"
 
-struct a2gx_dev;
+TEST(device, open_reset_close)
+{
+    struct a2gx_device dev;
 
-struct a2gx_mac_stats {
-    u32 mac_0;
-    u32 mac_1;
-    u32 tx_frames;
-    u32 rx_frames;
-    u32 rx_frames_crc_err;
-    u32 rx_frames_align_err;
-    u32 tx_octets_lo;
-    u32 rx_octets_lo;
-    u32 tx_pause_frames;
-    u32 rx_pause_frames;
-    u32 rx_if_errors;
-    u32 tx_if_errors;
-    u32 rx_ucast_pkts;
-    u32 rx_mcast_pkts;
-    u32 rx_bcast_pkts;
-    u32 tx_ucast_pkts;
-    u32 tx_mcast_pkts;
-    u32 tx_bcast_pkts;
-    u32 drop_events;
-    u32 rx_octets_total_lo;
-    u32 rx_frames_total_lo;
-    u32 rx_undersized_pkts;
-    u32 rx_oversized_pkts;
-};
+    a2gx_dev_init(&dev);
+    EXPECT_EQ(0, a2gx_dev_open(&dev, 0));
+    EXPECT_EQ(0, a2gx_dev_reset(&dev));
 
-int a2gx_mac_init(struct a2gx_dev *dev);
-void a2gx_mac_stats(struct a2gx_dev *dev, struct a2gx_mac_stats *stats);
+    a2gx_dev_rx(&dev); // WOHOO!
 
-#endif
+    a2gx_dev_close(&dev);
+}

@@ -24,16 +24,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef A2GX_DMA_H
-#define A2GX_DMA_H
+#ifndef A2GX_BARRIER_H
+#define A2GX_BARRIER_H
 
-struct a2gx_dev;
-
-int a2gx_dma_init(struct a2gx_dev *dev);
-void a2gx_dma_fini(struct a2gx_dev *dev);
-
-void a2gx_dma_reset(struct a2gx_dev *dev);
-
-void a2gx_dma_test(struct a2gx_dev *dev);
+#define a2gx_mb() asm volatile ("": : :"memory")
+#define a2gx_rmb() a2gx_mb()
+#define a2gx_wmb() a2gx_mb()
 
 #endif

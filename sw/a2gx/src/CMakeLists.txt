@@ -24,16 +24,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-obj-m := a2gx.o
+set(A2GX_CONFIG_HEADER "${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}/config.h")
+configure_file("${PROJECT_SOURCE_DIR}/src/config.h.in" ${A2GX_CONFIG_HEADER})
 
-KERNEL_DIR  := /lib/modules/$(shell uname -r)/build
-PWD         := $(shell pwd)
-MAKE_CMD    := $(MAKE) -C $(KERNEL_DIR) M=$(PWD)
+file(GLOB A2GX_PUBLIC_HEADER_FILES "${A2GX_SRC_INC_DIR}/*.h")
+file(GLOB A2GX_PRIVATE_HEADER_FILES "*.h")
+file(GLOB A2GX_SOURCE_FILES "*.c")
 
-default:
-	$(MAKE_CMD) modules
+add_library(${PROJECT_NAME} STATIC
+  ${A2GX_SOURCE_FILES} ${A2GX_PRIVATE_HEADER_FILES} ${A2GX_PUBLIC_HEADER_FILES})
 
-clean:
-	$(MAKE_CMD) clean
-
-.PHONY: default clean
+install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION lib)
+install(FILES ${A2GX_CONFIG_HEADER} DESTINATION include/${PROJECT_NAME})
+install(FILES ${A2GX_PUBLIC_HEADER_FILES} DESTINATION include/${PROJECT_NAME})
